@@ -7,7 +7,7 @@ class Server:
         self.address=address
         self.port=port
         self.clients=dict()
-        self.commands=["QUIT","CHAT","ABS","BACK","LIST","EDIT","REFUSE","SEND","TELL","STOP","SFIC","ACCEPT","HELP"]
+        self.commands="QUIT, CHAT, ABS, BACK , LIST , EDIT , REFUSE , SEND , TELL , STOP , SFIC ,ACCEPT,HELP"
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 
@@ -25,24 +25,25 @@ class Server:
         while boo:
             try:
                 message = client.recv(1024).decode("ascii")
-                commande = message.split(" ")
+                commande = message.split(" ",2)
                 #print(client)
-                if commande[0] == 'QUIT':
+                if commande[1] == 'QUIT':
                     print("oof")
                     #client.close()
                     #boo = False
-                elif commande[0] == 'LIST':
-                    #requesting_user = message.decode('ascii')
-                    liste()
-                elif commande[0] == 'HELP':
+                elif commande[1] == 'LIST':
                     pass
+
+                elif commande[1] == 'HELP':
+                    self.liste(client)
+                    #self.toString()
                     #requesting_user = message.decode('ascii')
                     #commands_list(requesting_user)
-                elif commande[0] == 'EDIT':
-                    self.verify_nickname(commande[1],client)
-                elif commande[0] == 'CHAT':
+                elif commande[1] == 'EDIT':
+                    self.verify_nickname(commande[2],client)
+                elif commande[1] == 'CHAT':
                     msg = message.split(" ",1)
-                    self.broadcast(self.clients[client] + " : " + msg[1])
+                    self.broadcast(self.clients[client] + " : " + commande[2])
                 else:
                     client.send('the command was not found'.encode('ascii'))
             except:
@@ -78,10 +79,12 @@ class Server:
 
 
 
-    def liste(self):
-        pass
-        #name_index = nicknames.index(nom)
-        #requesting_client=clients[name_index]
+    def liste(self,client):
+        #ex=print(*self.commands,sep=", ")
+        message=f'{self.commands}'
+        client.send(message.encode())
+
+
 
 
     def commands_list(sock):
@@ -92,7 +95,8 @@ class Server:
             sock.send(mess.upper())
 
 print("server is listening ...")
-serveur = Server('127.0.0.1',9184)
+serveur = Server('127.0.0.1',9219)
 serveur.server_start()
 serveur.receive()
 serveur.nickname_existing()
+
