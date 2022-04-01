@@ -8,9 +8,10 @@ class Server:
         self.port=port
         self.clients=dict()
         self.Connected=[]
-        self.disconnected=[]
+        self.away=[]
         self.commands=["QUIT","CHAT","ABS","BACK","LIST","EDIT","REFUSE","SEND","TELL","STOP","SFIC","ACCEPT","HELP"]
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.etat = True
 
 
     def server_start(self):
@@ -24,7 +25,7 @@ class Server:
 
     def handle(self,client):
         boo = True
-        while boo:
+        while boo and self.etat:
             try:
                 message = client.recv(1024).decode("ascii")
                 commande = message.split(" ",2)
@@ -36,11 +37,19 @@ class Server:
 
                 elif commande[1] == 'HELP':
                     self.liste(client)
+
                 elif commande[1] == 'EDIT':
                     self.verify_nickname(commande[2],client)
+
                 elif commande[1] == 'CHAT':
                     msg = message.split(" ",1)
                     self.broadcast(self.clients[client] + " : " + commande[2])
+
+                elif commande[1] == 'ABS':
+                    self.absent(client)
+
+                elif commande[1] == 'BACK':
+                    self.back(client)
                 else:
                     client.send('the command was not found'.encode('ascii'))
             except:
@@ -60,9 +69,35 @@ class Server:
             self.clients[client] = nickname
             print(f'Nickname of the client is {nickname} !')
             self.broadcast(f'{nickname} joined the chat! ')
+            self.etat=True
             self.Connected.append(nickname)
             thread = threading.Thread(target=self.handle,args=(client,))
             thread.start()
+
+    def absent(self,client):
+        self.etat=False
+        message="you are now away"
+        client.send(message.encode())
+        self.Connected.remove(self.clients[client])
+        self.away.append(self.clients[client])
+        message = client.recv(1024).decode("ascii")
+        if message=="BACK":
+            this.etat=True
+        else:
+            pass
+
+        
+
+    def back(self,client):
+        self.etat=True
+        message="you are now back"
+        client.send(message.encode())
+        self.Connected.append(self.clients[client])
+        self.away.remove(self.clients[client])
+        handle(client)
+
+
+
 
     def verify_nickname(self,newNick,client):
         if newNick in self.clients.values():
@@ -77,8 +112,7 @@ class Server:
                 else:
                     pass
             self.clients[client]=newNick
-            
-       
+
     def liste(self,client):
         #ex=print(*self.commands,sep=", ")
         s=" ,".join(self.commands)
@@ -115,7 +149,8 @@ class Server:
             sock.send(mess.upper())
 
 print("server is listening ...")
-serveur = Server('127.0.0.1',9261)
+serveur = Server('127.0.0.1',9278)
 serveur.server_start()
 serveur.receive()
 serveur.nickname_existing()
+
