@@ -7,7 +7,9 @@ class Server:
         self.address=address
         self.port=port
         self.clients=dict()
-        self.commands="QUIT, CHAT, ABS, BACK , LIST , EDIT , REFUSE , SEND , TELL , STOP , SFIC ,ACCEPT,HELP"
+        self.Connected=[]
+        self.disconnected=[]
+        self.commands=["QUIT","CHAT","ABS","BACK","LIST","EDIT","REFUSE","SEND","TELL","STOP","SFIC","ACCEPT","HELP"]
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 
@@ -28,17 +30,12 @@ class Server:
                 commande = message.split(" ",2)
                 #print(client)
                 if commande[1] == 'QUIT':
-                    print("oof")
-                    #client.close()
-                    #boo = False
+                    self.quit(client)
                 elif commande[1] == 'LIST':
-                    pass
+                    self.afficher_liste(client)
 
                 elif commande[1] == 'HELP':
                     self.liste(client)
-                    #self.toString()
-                    #requesting_user = message.decode('ascii')
-                    #commands_list(requesting_user)
                 elif commande[1] == 'EDIT':
                     self.verify_nickname(commande[2],client)
                 elif commande[1] == 'CHAT':
@@ -60,11 +57,10 @@ class Server:
             print(f'Connected with {str(address)}')
             client.send('nickname?'.encode('ascii'))
             nickname = client.recv(1024).decode('ascii')
-            print(nickname)
             self.clients[client] = nickname
             print(f'Nickname of the client is {nickname} !')
             self.broadcast(f'{nickname} joined the chat! ')
-            print(f'{nickname}')
+            self.Connected.append(nickname)
             thread = threading.Thread(target=self.handle,args=(client,))
             thread.start()
 
@@ -74,17 +70,41 @@ class Server:
             client.send(message.encode())
         else:
             self.broadcast(f'{self.clients[client]} is now {newNick}')
+            
+            for i in range(len(self.Connected)):
+                if self.Connected[i]==self.clients[client]:
+                    self.Connected[i]=newNick
+                else:
+                    pass
             self.clients[client]=newNick
-
-
-
-
+            
+       
     def liste(self,client):
         #ex=print(*self.commands,sep=", ")
-        message=f'{self.commands}'
+        s=" ,".join(self.commands)
+        print(s)
+        message=f'{s}'
         client.send(message.encode())
 
 
+    def afficher_liste(self,client):
+        s=" ,".join(self.Connected)
+        print(s)
+        message=f'{s}'
+        client.send(message.encode())
+        #s = " ,"
+        #print(s.join(self.Connected))
+
+    def quit(self,client):
+        message="you have been disconnected"
+        client.send(message.encode())
+        self.Connected.remove(self.clients[client])
+        name = self.clients[client]
+        del self.clients[client]
+        self.broadcast(f'{name} disconnected')
+        #client.close()
+        
+            
 
 
     def commands_list(sock):
@@ -95,8 +115,7 @@ class Server:
             sock.send(mess.upper())
 
 print("server is listening ...")
-serveur = Server('127.0.0.1',9219)
+serveur = Server('127.0.0.1',9261)
 serveur.server_start()
 serveur.receive()
 serveur.nickname_existing()
-
