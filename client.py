@@ -1,21 +1,47 @@
-import socket,sys
+import socket
 import threading
 
 
-if len(sys.argv) != 3:
-    print(f"Usage: python {sys.argv[0]} <adresse> <port>",file=sys.stderr)
-    sys.exit(1)
+class Client():
+    def __init__(self,nickname,address,port):
+        self.nickname = nickname
+        self.address = address
+        self.port = port
+        self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-with socket.socket() as sock_locale:
-    sock_locale.connect((sys.argv[1], int(sys.argv[2])))
-    print (f"Connexion vers ' à l'adresse {sys.argv[1]} et au port {str(sys.argv[2])} + ' reussie.")
-    while True:
-        commande = input("Entrez une commande (quit pour quitter) : ")
-        if commande.upper() == "QUIT":
-            break
-        sock_locale.send(commande.encode())
-        reponse = sock_locale.recv(256)
-        print(reponse.decode())
+    """nickname = input("Choose a nickname : ")
+    client=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client.connect(('127.0.0.1',9184))
+    """
+    def connect(self):
+        self.client.connect((self.address,self.port))
+
+    def receive(self):
+        while True:
+            try:
+                message = self.client.recv(1024).decode('ascii')
+                if message == "nickname?":
+                    self.client.send(self.nickname.encode('utf-8'))
+                else:
+                    print(message)
+            except:
+                print("an error has occured!")
+                self.client.close()
+                break
 
 
+    def write(self):
+        while True:
+            message = f'{self.nickname}: {input("")}'
+            self.client.send(message.encode('ascii'))
+            
 
+nickname = input("choose a nickname:")
+client = Client(nickname,"127.0.0.1",9278)
+
+client.connect()
+receive_thread = threading.Thread(target=client.receive)
+receive_thread.start()
+
+write_thread = threading.Thread(target=client.write)
+write_thread.start()
