@@ -1,4 +1,3 @@
-
 import socket
 import threading
 
@@ -33,10 +32,10 @@ class Server:
                 if commande[1] == 'QUIT':
                     self.quit(client)
                 elif commande[1] == 'LIST':
-                    self.afficher_liste(client)
+                    self.liste_clients(client)
 
                 elif commande[1] == 'HELP':
-                    self.liste(client)
+                    self.liste_commandes(client)
 
                 elif commande[1] == 'EDIT':
                     self.verify_nickname(commande[2],client)
@@ -80,7 +79,13 @@ class Server:
         client.send(message.encode())
         #self.Connected.remove(self.clients[client])
         self.away.append(self.clients[client])
+        for key in self.clients:
+            if key == client:
+                message=f'{self.clients[client]} is now away.'
+                self.client.send(message.encode()) 
         message = client.recv(1024).decode("ascii")
+                    #print(f'verify:{self.clients}')
+        #self.broadcast(f'{self.clients[client]} is now away.')
         if message=="BACK":
             self.etat=True
         else:
@@ -103,13 +108,13 @@ class Server:
         if newNick in self.clients.values():
             message=f'{newNick} is already taken'
             client.send(message.encode())
-        else:
+        else:       
             self.broadcast(f'{self.clients[client]} is now {newNick}')
             for key in self.clients:
                 if key == client:
                 #if self.Connected[i]==self.clients[client]:
                     self.clients[client]=newNick
-                    print(f'verify:{self.clients}')
+                    #print(f'verify:{self.clients}')
 
     def liste_commandes(self,client):
         #ex=print(*self.commands,sep=", ")
@@ -120,7 +125,8 @@ class Server:
 
 
     def liste_clients(self,client):
-        x = list(self.clients.values())  
+        x = list(self.clients.values())
+        x.sort()
         s=" ,".join(x)
         print(s)
         message=f'{s}'
@@ -134,11 +140,13 @@ class Server:
         name = self.clients[client]
         del self.clients[client]
         self.broadcast(f'{name} disconnected')
-        ##client.close()
+        client.close()
+        th
+        #JOIN()
         
 
 print("server is listening ...")
-serveur = Server('127.0.0.1',9296)
+serveur = Server('127.0.0.1',9304)
 serveur.server_start()
 serveur.receive()
 serveur.nickname_existing()
