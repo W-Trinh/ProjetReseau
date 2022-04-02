@@ -11,11 +11,11 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-class Ui_TchatDNF(object):
-    def setupUi(self, TchatDNF):
-        TchatDNF.setObjectName("TchatDNF")
-        TchatDNF.resize(795, 651)
-        self.centralwidget = QtWidgets.QWidget(TchatDNF)
+class Ui_TchatDNC(object):
+    def setupUi(self, TchatDNC):
+        TchatDNC.setObjectName("TchatDNC")
+        TchatDNC.resize(795, 651)
+        self.centralwidget = QtWidgets.QWidget(TchatDNC)
         self.centralwidget.setObjectName("centralwidget")
         self.chatbox = QtWidgets.QTextBrowser(self.centralwidget)
         self.chatbox.setGeometry(QtCore.QRect(10, 10, 781, 501))
@@ -38,29 +38,29 @@ class Ui_TchatDNF(object):
         self.butEdit = QtWidgets.QPushButton(self.centralwidget)
         self.butEdit.setGeometry(QtCore.QRect(250, 520, 131, 36))
         self.butEdit.setObjectName("butEdit")
-        TchatDNF.setCentralWidget(self.centralwidget)
-        self.statusbar = QtWidgets.QStatusBar(TchatDNF)
+        TchatDNC.setCentralWidget(self.centralwidget)
+        self.statusbar = QtWidgets.QStatusBar(TchatDNC)
         self.statusbar.setObjectName("statusbar")
-        TchatDNF.setStatusBar(self.statusbar)
+        TchatDNC.setStatusBar(self.statusbar)
 
-        self.retranslateUi(TchatDNF)
-        QtCore.QMetaObject.connectSlotsByName(TchatDNF)
+        self.retranslateUi(TchatDNC)
+        QtCore.QMetaObject.connectSlotsByName(TchatDNC)
 
-    def retranslateUi(self, TchatDNF):
+    def retranslateUi(self, TchatDNC):
         _translate = QtCore.QCoreApplication.translate
-        TchatDNF.setWindowTitle(_translate("TchatDNF", "MainWindow"))
-        self.butChat.setText(_translate("TchatDNF", "Send"))
-        self.butList.setText(_translate("TchatDNF", "Users list"))
-        self.butState.setText(_translate("TchatDNF", "Online"))
-        self.butHelp.setText(_translate("TchatDNF", "Command list"))
-        self.butEdit.setText(_translate("TchatDNF", "Change nickname"))
+        TchatDNC.setWindowTitle(_translate("TchatDNC", "MainWindow"))
+        self.butChat.setText(_translate("TchatDNC", "Send"))
+        self.butList.setText(_translate("TchatDNC", "Users list"))
+        self.butState.setText(_translate("TchatDNC", "Online"))
+        self.butHelp.setText(_translate("TchatDNC", "Command list"))
+        self.butEdit.setText(_translate("TchatDNC", "Change nickname"))
 
 
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
-    TchatDNF = QtWidgets.QMainWindow()
-    ui = Ui_TchatDNF()
-    ui.setupUi(TchatDNF)
-    TchatDNF.show()
+    TchatDNC = QtWidgets.QMainWindow()
+    ui = Ui_TchatDNC()
+    ui.setupUi(TchatDNC)
+    TchatDNC.show()
     sys.exit(app.exec_())
