@@ -56,7 +56,7 @@ class Server:
                     self.back(client)
                 
                 elif commande[1] == 'SEND':
-                    print(f'the receiver is {commande[2]}')
+                    print(f'mon tableau: {commande} et sa taille: {len(commande)}')
 
                     if len(commande) < 3:
                         client.send("Missing parameter".encode())
