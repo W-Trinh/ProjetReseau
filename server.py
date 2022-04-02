@@ -1,4 +1,7 @@
+from multiprocessing.connection import Client
+import os
 import socket
+import sys
 import threading
 
 
@@ -31,6 +34,8 @@ class Server:
                 #print(client)
                 if commande[1] == 'QUIT':
                     self.quit(client)
+                    #boo = False
+                    #break
                 elif commande[1] == 'LIST':
                     self.liste_clients(client)
 
@@ -49,8 +54,27 @@ class Server:
 
                 elif commande[1] == 'BACK':
                     self.back(client)
+                
+                elif commande[1] == 'SEND':
+                    print(f'the receiver is {commande[2]}')
+
+                    if len(commande) < 3:
+                        client.send("Missing parameter".encode())
+                    elif commande[2] == " ":
+                        client.send("Missing parameter".encode())
+                    else:
+                        self.send(client,commande[2])
+
+                
+                elif commande[1] == 'REFUSE':
+                    pass
+
+                elif commande[1] == 'CONNECT':
+                    pass
+
+
                 else:
-                    client.send('the command was not found'.encode('ascii'))
+                    client.send('Command was not found'.encode('ascii'))
             except:
                 client.close()
                 nickname = self.clients[client]
@@ -77,15 +101,8 @@ class Server:
         self.etat=False
         message="you are now away"
         client.send(message.encode())
-        #self.Connected.remove(self.clients[client])
         self.away.append(self.clients[client])
-        for key in self.clients:
-            if key == client:
-                message=f'{self.clients[client]} is now away.'
-                self.client.send(message.encode()) 
         message = client.recv(1024).decode("ascii")
-                    #print(f'verify:{self.clients}')
-        #self.broadcast(f'{self.clients[client]} is now away.')
         if message=="BACK":
             self.etat=True
         else:
@@ -97,27 +114,53 @@ class Server:
         self.etat=True
         message="you are now back"
         client.send(message.encode())
-       # self.Connected.append(self.clients[client])
         self.away.remove(self.clients[client])
-        handle(client)
+        self.handle(client)
 
+    
+    def send(self,client,receiver):
 
+        if receiver in self.clients.values():
+            if receiver == self.clients[client]:
+                message = f"{self.clients[client]} is you, that means you can't have a private chat with yourself"
+                client.send(message.encode())
+            else:
+                message = f"{self.clients[client]} wants to have a private a chat with you.respond with ACCEPT to accept the request or REFUSE to refuse"
+                for key, valeur in self.clients.items(): 
+                    if receiver == valeur: 
+                        receiver_sock = key 
+
+                receiver_sock.send(message.encode())
+
+        else:
+            print(f"408 {receiver} doesn't exist")
+            message = f"408 {receiver} doesn't exist"
+            client.send(message.encode())
+
+        
+    def refuse(self,client_to_respond,client_receiving_response):
+   
+        pass
+
+    def connect(self,client):
+        pass
+
+        
 
 
     def verify_nickname(self,newNick,client):
         if newNick in self.clients.values():
             message=f'{newNick} is already taken'
             client.send(message.encode())
-        else:       
+        else:
             self.broadcast(f'{self.clients[client]} is now {newNick}')
             for key in self.clients:
                 if key == client:
                 #if self.Connected[i]==self.clients[client]:
                     self.clients[client]=newNick
-                    #print(f'verify:{self.clients}')
+                    print(f'verify:{self.clients}')
 
     def liste_commandes(self,client):
-        #ex=print(*self.commands,sep=", ")
         s=" ,".join(self.commands)
         print(s)
         message=f'{s}'
@@ -127,6 +170,7 @@ class Server:
     def liste_clients(self,client):
         x = list(self.clients.values())
         x.sort()
+        print(f"sorted list: {x}")
         s=" ,".join(x)
         print(s)
         message=f'{s}'
@@ -136,17 +180,19 @@ class Server:
     def quit(self,client):
         message="you have been disconnected"
         client.send(message.encode())
-        #self.Connected.remove(self.clients[client])
         name = self.clients[client]
         del self.clients[client]
         self.broadcast(f'{name} disconnected')
+        boo = False
         client.close()
-        th
-        #JOIN()
+        
+
+
+        
         
 
 print("server is listening ...")
-serveur = Server('127.0.0.1',9304)
+serveur = Server('127.0.0.1',9305)
 serveur.server_start()
 serveur.receive()
-serveur.nickname_existing()
+
