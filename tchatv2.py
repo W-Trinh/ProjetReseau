@@ -1,26 +1,33 @@
 from PyQt5 import QtCore
-from PyQt5.QtWidgets import QApplication, QWidget, QMainWindow, QMessageBox, QInputDialog, QPushButton
+from PyQt5.QtWidgets import QApplication, QWidget, QMainWindow, QMessageBox, QInputDialog, QPushButton, QDialog, QDialogButtonBox
+
 from fenetrev2 import Ui_TchatDNF
 from client import Client
+from conndialog import ConnDialog
+
 import threading, time
 
-class tchat(QMainWindow, Ui_TchatDNF):
+class Tchat(QMainWindow, Ui_TchatDNF):
 
     def __init__(self, parent = None):
         QMainWindow.__init__(self, parent)
-        nickname = self.new_nickname()
-        self.user = Client(nickname, "127.0.0.1", 9308)
+        connexion = ConnDialog()
+        if connexion.exec_() == QDialog.Accepted:
+            val = connexion.getVal()
+        self.user = Client(val["nickname"], val["address"], 9310)
         self.user.connect()
         self.setupUi(self)
+        self.setWindowTitle("DNF Chat")
         self.butChat.clicked.connect(self.chat)
         self.butState.clicked.connect(self.change_state)
         self.butHelp.clicked.connect(self.get_command)
         self.butEdit.clicked.connect(self.new_nickname)
 
     def new_nickname(self):
-        text, ok = QInputDialog.getText(self,"New nickname","Please enter your new nickname :")
+        newNick, ok = QInputDialog.getText(self,"New nickname","Please enter your new nickname :")
         if ok:
-            return text
+            message = self.user.nickname + ": EDIT " + newNick        
+            self.user.client.send(message.encode())
 
     def chat(self):
         message = self.user.nickname + ": CHAT " + self.msgArea.toPlainText()        
@@ -53,7 +60,7 @@ class tchat(QMainWindow, Ui_TchatDNF):
 if __name__ == "__main__":
     import sys
     app = QApplication(sys.argv)
-    win = tchat()
+    win = Tchat()
     #threadMsg = threading.Thread(target = win.send_msg).start()
     #threadMp = threading.Thread(target = win.mp).start()
     threadRec = threading.Thread(target = win.receive).start()
