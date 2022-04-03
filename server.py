@@ -67,7 +67,14 @@ class Server:
 
                 
                 elif commande[1] == 'REFUSE':
-                    pass
+                    print(f'mon tableau: {commande} et sa taille: {len(commande)}')
+                    if len(commande) < 3:
+                        client.send("Missing parameter".encode())
+                    elif commande[2] == '':
+                        client.send("Missing parameter".encode())
+                    else:
+                        self.refuse(client,commande[2])
+
 
                 elif commande[1] == 'CONNECT':
                     pass
@@ -139,8 +146,22 @@ class Server:
 
         
     def refuse(self,client_to_respond,client_receiving_response):
-   
-        pass
+        if client_receiving_response in self.clients.values():
+            if client_receiving_response == self.clients[client_to_respond]:
+                message = f"{self.clients[client_to_respond]} is you, that means you can't use this command to yourself"
+                client_to_respond.send(message.encode())
+            
+            else:
+                message = f"{self.clients[client_to_respond]} refused to have a private chat with you."
+                for key, valeur in self.clients.items(): 
+                    if client_receiving_response == valeur: 
+                        client_receiving_response_sock = key 
+
+                client_receiving_response_sock.send(message.encode())
+        else:
+            print(f"408 {client_receiving_response} doesn't exist")
+            message = f"408 {client_receiving_response} doesn't exist"
+            client_receiving_response.send(message.encode())
 
     def connect(self,client):
         pass
