@@ -20,7 +20,7 @@ class Ui_TchatDNC(object):
         self.chatbox = QtWidgets.QTextBrowser(self.centralwidget)
         self.chatbox.setGeometry(QtCore.QRect(10, 10, 781, 501))
         self.chatbox.setObjectName("Chatbox")
-        self.msgArea = QtWidgets.QTextEdit(self.centralwidget)
+        self.msgArea = QtWidgets.QLineEdit(self.centralwidget)
         self.msgArea.setGeometry(QtCore.QRect(10, 570, 641, 51))
         self.msgArea.setObjectName("msgArea")
         self.butChat = QtWidgets.QPushButton(self.centralwidget)
