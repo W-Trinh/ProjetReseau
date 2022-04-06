@@ -225,7 +225,10 @@ class Server:
         self.client.close()
         
 
-print("server is listening ...")
-serveur = Server('127.0.0.1',9372)
+port = int(input("choose a port:"))
+host = input("choose a host:")
+#host = "127.0.0.1"
+serveur = Server(host,port)
 serveur.server_start()
+print("server is listening ...")
 serveur.receive()
