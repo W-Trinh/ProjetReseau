@@ -1,6 +1,6 @@
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication, QWidget, QMainWindow, QMessageBox, QInputDialog, QPushButton, QDialog, QDialogButtonBox
-
+from PyQt5.QtGui import QTextCursor
 from fenetrev2 import Ui_TchatDNC
 from client import Client
 from conndialog import ConnDialog
@@ -14,10 +14,11 @@ class Tchat(QMainWindow, Ui_TchatDNC):
         connexion = ConnDialog()
         if connexion.exec_() == QDialog.Accepted:
             val = connexion.getVal()
-        self.user = Client(val["nickname"], val["address"], 9312)
+        self.user = Client(val["nickname"], val["address"], 9377)
         self.user.connect()
         self.setupUi(self)
         self.setWindowTitle("DNC Chat")
+        self.msgArea.returnPressed.connect(self.chat)
         self.butChat.clicked.connect(self.chat)
         self.butState.clicked.connect(self.change_state)
         self.butHelp.clicked.connect(lambda: self.use_command("HELP"))
@@ -31,17 +32,25 @@ class Tchat(QMainWindow, Ui_TchatDNC):
             self.use_command("EDIT", newNick)
 
     def chat(self):
-        self.use_command("CHAT", self.msgArea.toPlainText())
-        self.msgArea.clear()
+        msg = self.msgArea.text().strip()
+        if( len(msg) != 0):
+            self.use_command("CHAT", msg)
+            self.msgArea.clear()
+
 
     def change_state(self):
         if(self.butState.text()=="Online"):
             self.butState.setText("AFK")
+            self.use_command("ABS")
+            self.butEdit.setEnabled(False)
         else:
             self.butState.setText("Online")
+            self.butEdit.setEnabled(True)
+            self.use_command("BACK")
 
     def receive(self):
         while True:
+            self.chatbox.moveCursor(QTextCursor.End)
             try:
                 message = self.user.client.recv(1024).decode('ascii')
                 if message == "nickname?":
