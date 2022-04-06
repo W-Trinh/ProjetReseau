@@ -36,12 +36,23 @@ class Client():
             self.client.send(message.encode('ascii'))
             
 
-nickname = input("choose a nickname:")
-client = Client(nickname,"127.0.0.1",9278)
+if __name__ == "__main__":
+           
+    nickname = input("choose a nickname:")
+    #port = int(input("choose a port:"))
+    #host = input("choose a host:")
+    port = 9900
+    host = "127.0.0.1"
+    commande = input(f"Enter CONNECT {host} {port} to connect yourself:")
+    if commande.upper() == f"CONNECT {host} {port}":
+    
+        client = Client(nickname,host,port)
+        client.connect()
+        receive_thread = threading.Thread(target=client.receive)
+        receive_thread.start()
 
-client.connect()
-receive_thread = threading.Thread(target=client.receive)
-receive_thread.start()
-
-write_thread = threading.Thread(target=client.write)
-write_thread.start()
+        write_thread = threading.Thread(target=client.write)
+        write_thread.start()
+    
+    else:
+        print(f"Failed to connect")
