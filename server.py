@@ -1,7 +1,4 @@
-from multiprocessing.connection import Client
-import os
 import socket
-import sys
 import threading
 
 
@@ -12,8 +9,9 @@ class Server:
         self.clients=dict()
         self.away=[]
         self.commands=["QUIT","CHAT","ABS","BACK","LIST","EDIT","REFUSE","SEND","TELL","STOP","SFIC","ACCEPT","HELP"]
+        self.definitions=["logout the user","send a message publically","Changes the state of the user from abs to away"]
+        #self.com = [["quit","LOGOUT THE USER"],["CHAT","blabla"]]
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.etat = True
 
 
     def server_start(self):
@@ -27,15 +25,13 @@ class Server:
 
     def handle(self,client):
         boo = True
-        while boo and self.etat:
+        while boo:
             try:
                 message = client.recv(1024).decode("ascii")
                 commande = message.split(" ",2)
                 #print(client)
                 if commande[1] == 'QUIT':
                     self.quit(client)
-                    #boo = False
-                    #break
                 elif commande[1] == 'LIST':
                     self.liste_clients(client)
 
@@ -49,22 +45,16 @@ class Server:
                     msg = message.split(" ",1)
                     self.broadcast(self.clients[client] + " : " + commande[2])
 
-                elif commande[1] == 'ABS':
-                    self.absent(client)
-
-                elif commande[1] == 'BACK':
-                    self.back(client)
-                
                 elif commande[1] == 'SEND':
                     print(f'mon tableau: {commande} et sa taille: {len(commande)}')
+
                     if len(commande) < 3:
                         client.send("Missing parameter".encode())
-                    elif commande[2] == '':
+                    elif commande[2] == " ":
                         client.send("Missing parameter".encode())
                     else:
                         self.send(client,commande[2])
 
-                
                 elif commande[1] == 'REFUSE':
                     print(f'mon tableau: {commande} et sa taille: {len(commande)}')
                     if len(commande) < 3:
@@ -74,20 +64,22 @@ class Server:
                     else:
                         self.refuse(client,commande[2])
 
-                elif commande[1] == 'ACCEPT':
-                    if len(commande) < 3:
-                        client.send("Missing parameter".encode())
-                    elif commande[2] == '':
-                        client.send("Missing parameter".encode())
-                    else:
-                        self.accept(client,commande[2])
 
                 elif commande[1] == 'CONNECT':
                     pass
 
+                elif commande[1] == 'ABS':
+                    self.absent(client)
+
+                elif commande[1] == 'BACK':
+                    message="You are already online"
+                    client.send(message.encode())
+
+                elif commande[1] == 'SFIC':
+                    self.send_file(client)
 
                 else:
-                    client.send('Command was not found'.encode('ascii'))
+                    client.send('the command was not found'.encode('ascii'))
             except:
                 client.close()
                 nickname = self.clients[client]
@@ -111,28 +103,25 @@ class Server:
             thread.start()
 
     def absent(self,client):
-        self.etat=False
-        message="you are now away"
-        client.send(message.encode())
+        self.broadcast(f'{self.clients[client]} is now away')
         self.away.append(self.clients[client])
-        message = client.recv(1024).decode("ascii")
-        if message=="BACK":
-            self.etat=True
-        else:
-            pass
+        while True:
+            try:
+                next_msg = client.recv(1024).decode("ascii")
+                nxt = next_msg.split(" ",2)
+                if nxt[1] == 'BACK':
+                    self.broadcast(f'{self.clients[client]} is back')
+                    break
+                elif nxt[1] == "ABS":
+                    message="You are already away"
+                    client.send(message.encode())
+                elif nxt[1] == "CHAT":
+                    message="you can't send messages"
+            except:
+                print("an error")
 
         
-
-    def back(self,client):
-        self.etat=True
-        message="you are now back"
-        client.send(message.encode())
-        self.away.remove(self.clients[client])
-        self.handle(client)
-
-    
     def send(self,client,receiver):
-
         if receiver in self.clients.values():
             if receiver == self.clients[client]:
                 message = f"{self.clients[client]} is you, that means you can't have a private chat with yourself"
@@ -149,8 +138,6 @@ class Server:
             print(f"408 {receiver} doesn't exist")
             message = f"408 {receiver} doesn't exist"
             client.send(message.encode())
-
-        
     def refuse(self,client_to_respond,client_receiving_response):
         
             if client_receiving_response in self.clients.values():
@@ -171,8 +158,6 @@ class Server:
                 client_to_respond.send(message.encode())
         
 
-    
-
 
     def accept(self,client_to_respond,client_receiving_response):
         if client_receiving_response in self.clients.values():
@@ -191,40 +176,39 @@ class Server:
             print(f"408 {client_receiving_response} doesn't exist")
             message = f"408 {client_receiving_response} doesn't exist"
             client_to_respond.send(message.encode())
-            
-
-
-
 
     def connect(self,client):
         pass
 
-        
-
+    def send_file(self,client):
+        message="what file do you want to send : "
+        client.send(message.encode())
 
     def verify_nickname(self,newNick,client):
         if newNick in self.clients.values():
             message=f'{newNick} is already taken'
             client.send(message.encode())
-        else:
+        else:       
             self.broadcast(f'{self.clients[client]} is now {newNick}')
             for key in self.clients:
                 if key == client:
-                
+                #if self.Connected[i]==self.clients[client]:
                     self.clients[client]=newNick
-                    print(f'verify:{self.clients}')
+                    #print(f'verify:{self.clients}')
+
 
     def liste_commandes(self,client):
+        #ex=print(*self.commands,sep=", ")
         s=" ,".join(self.commands)
         print(s)
         message=f'{s}'
         client.send(message.encode())
+        #print(tabulate(self.com, headers=["command","definition"]))
 
 
     def liste_clients(self,client):
         x = list(self.clients.values())
         x.sort()
-        print(f"sorted list: {x}")
         s=" ,".join(x)
         print(s)
         message=f'{s}'
@@ -234,19 +218,14 @@ class Server:
     def quit(self,client):
         message="you have been disconnected"
         client.send(message.encode())
+        #self.Connected.remove(self.clients[client])
         name = self.clients[client]
         del self.clients[client]
         self.broadcast(f'{name} disconnected')
-        boo = False
-        client.close()
-        #os._exit(0)
-        #os.exit(0)
-
-
-        
+        self.client.close()
         
 
 print("server is listening ...")
-serveur = Server('127.0.0.1',9306)
+serveur = Server('127.0.0.1',9372)
 serveur.server_start()
 serveur.receive()
