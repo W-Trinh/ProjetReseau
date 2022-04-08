@@ -29,6 +29,7 @@ class Server:
             try:
                 message = client.recv(1024).decode("ascii")
                 commande = message.split(" ",2)
+                commande_de_tell = message.split(" ",3)
                 #print(client)
                 if commande[1] == 'QUIT':
                     self.quit(client)
@@ -75,6 +76,15 @@ class Server:
                 elif commande[1] == 'BACK':
                     message="418 : You are already online"
                     client.send(message.encode())
+                    
+                elif commande[1] == 'ACCEPT':
+                    if len(commande) < 3:
+                        client.send("Missing parameter".encode())
+                    elif commande[2] == '':
+                        client.send("Missing parameter".encode())
+                    else:
+                        self.accept(client,commande[2])
+
 
                 elif commande[1] == 'SFIC':
                     self.send_file(client)
@@ -188,12 +198,33 @@ class Server:
                 print(f"408 {client_receiving_response} doesn't exist")
                 message = f"408 {client_receiving_response} doesn't exist"
                 client_to_respond.send(message.encode())'''
+    def tell(self,sender,receiver,message):
+
+        if receiver in self.clients.values():
+            if receiver == self.clients[sender]:
+                message = f"{self.clients[sender]} is you, that means you can't send yourself a message"
+                sender.send(message.encode())
+            else:
+                #message = f"{self.clients[sender]} wants to have a private a chat with you.respond with ACCEPT to accept the request or REFUSE to refuse"
+                sender_name = f"{self.clients[sender]} : "
+                for key, valeur in self.clients.items(): 
+                    if receiver == valeur: 
+                        receiver_sock = key 
+
+                receiver_sock.send(sender_name.encode() + message.encode())
+
+        else:
+            print(f"408 {receiver} doesn't exist")
+            message = f"408 {receiver} doesn't exist"
+            sender.send(message.encode())
+
+    
 
     def connect(self,client):
         pass
 
     def send_file(self,client):
-        message="what file do you want to send : "
+        message="which file do you want to send : "
         client.send(message.encode())
 
     def verify_nickname(self,newNick,client):
