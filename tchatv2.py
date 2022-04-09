@@ -14,7 +14,7 @@ class Tchat(QMainWindow, Ui_TchatDNC):
         connexion = ConnDialog()
         if connexion.exec_() == QDialog.Accepted:
             val = connexion.getVal()
-        self.user = Client(val["nickname"], val["address"], 9377)
+        self.user = Client(val["nickname"], val["address"], val["port"])
         self.user.connect()
         self.setupUi(self)
         self.setWindowTitle("DNC Chat")
@@ -24,7 +24,8 @@ class Tchat(QMainWindow, Ui_TchatDNC):
         self.butHelp.clicked.connect(lambda: self.use_command("HELP"))
         self.butEdit.clicked.connect(self.new_nickname)
         self.butList.clicked.connect(lambda: self.use_command("LIST"))
-        self.threadRec = threading.Thread(target = self.receive).start()
+        self.threadRec = threading.Thread(target = self.receive)
+        self.threadRec.start()
 
     def new_nickname(self):
         newNick, ok = QInputDialog.getText(self,"New nickname","Please enter your new nickname :")
@@ -70,16 +71,13 @@ class Tchat(QMainWindow, Ui_TchatDNC):
 
     def closeEvent(self , event):
         self.use_command("QUIT")
-        for t in threading.enumerate():
-            t.join()
+        for thread in threading.enumerate():
+            thread.join()
 
 if __name__ == "__main__":
     import sys
     app = QApplication(sys.argv)
     win = Tchat()
-    #threadMsg = threading.Thread(target = win.send_msg).start()
-    #threadMp = threading.Thread(target = win.mp).start()
-    #threadRec = threading.Thread(target = win.receive).start()
     win.show()
     sys.exit(app.exec())    
     
