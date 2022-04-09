@@ -1,13 +1,16 @@
 import socket
 import threading
-
+import configparser
 
 
 
 class Server:
-    def __init__(self,address,port):
-        self.address=address
-        self.port=port
+    def __init__(self):
+        config = configparser.ConfigParser()
+        config.read("config.ini")
+
+        self.address = config.get("settings", "address")
+        self.port = int(config.get("settings", "port"))
         self.clients=dict()
         self.away=[]
         self.commands=["QUIT","CHAT","ABS","BACK","LIST","EDIT","REFUSE","SEND","TELL","STOP","SFIC","ACCEPT","HELP"]
@@ -15,8 +18,8 @@ class Server:
         #self.com = [["quit","LOGOUT THE USER"],["CHAT","blabla"]]
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-
     def server_start(self):
+        print("Server started on :" + self.address + ", " + str(self.port))
         self.server.bind((self.address,self.port))
         self.server.listen()
 
@@ -35,7 +38,7 @@ class Server:
                 #print(client)
                 if commande[1] == 'QUIT':
                     self.quit(client)
-                    boo = false
+                    boo = False
                 elif commande[1] == 'LIST':
                     self.liste_clients(client)
 
@@ -267,18 +270,24 @@ class Server:
         name = self.clients[client]
         del self.clients[client]
         self.broadcast(f'207 : {name} disconnected')
-        self.client.close()
+        client.close()
         
+    def create_config(self):
+        config = configparser.ConfigParser()
+        config["settings"] = {"address":self.address,
+        "port":self.port}
+        with open("config.ini", "w") as fic:
+            config.write(fic)
+        return config
 
 '''print("server is listening ...")
 serveur = Server('127.0.0.1',9381)
 serveur.server_start()
 serveur.receive()
 '''
-port = int(input("choose a port:"))
-host = input("choose a host:")
+
 #host = "127.0.0.1"
-serveur = Server(host,port)
+serveur = Server()
 serveur.server_start()
 print("server is listening ...")
 serveur.receive()

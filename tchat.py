@@ -72,7 +72,6 @@ class Tchat(QMainWindow, Ui_TchatDNC):
                 reponse = self.user.client.recv(1024).decode('ascii')
                 if reponse == "nickname?":
                     self.user.client.send(self.user.nickname.encode('utf-8'))
-                    #self.use_command("LIST")
 
                 else:
                     code = reponse.split(":",1)[0].strip()
@@ -119,6 +118,7 @@ class Tchat(QMainWindow, Ui_TchatDNC):
 
             if action == privatechatAction:
                 print("SEND " + userclicked.text() )
+                self.use_command("SEND", userclicked.text())
             
             if action == sendfileAction:
                 print("SFIC " + userclicked.text() )
