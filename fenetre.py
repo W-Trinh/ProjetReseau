@@ -11,43 +11,55 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-class Ui_MainWindow(object):
-    def setupUi(self, MainWindow):
-        MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1027, 600)
-        self.centralwidget = QtWidgets.QWidget(MainWindow)
+class Ui_TchatDNC(object):
+    def setupUi(self, TchatDNC):
+        TchatDNC.setObjectName("TchatDNC")
+        TchatDNC.resize(991, 651)
+        self.centralwidget = QtWidgets.QWidget(TchatDNC)
         self.centralwidget.setObjectName("centralwidget")
-        self.textBrowser = QtWidgets.QTextBrowser(self.centralwidget)
-        self.textBrowser.setGeometry(QtCore.QRect(10, 10, 781, 501))
-        self.textBrowser.setObjectName("textBrowser")
-        self.textEdit = QtWidgets.QTextEdit(self.centralwidget)
-        self.textEdit.setGeometry(QtCore.QRect(10, 520, 641, 51))
-        self.textEdit.setObjectName("textEdit")
-        self.pushButton = QtWidgets.QPushButton(self.centralwidget)
-        self.pushButton.setGeometry(QtCore.QRect(660, 520, 131, 51))
-        self.pushButton.setObjectName("pushButton")
-        self.listWidget = QtWidgets.QListWidget(self.centralwidget)
-        self.listWidget.setGeometry(QtCore.QRect(800, 10, 211, 561))
-        self.listWidget.setObjectName("listWidget")
-        MainWindow.setCentralWidget(self.centralwidget)
-        self.statusbar = QtWidgets.QStatusBar(MainWindow)
+        self.chatbox = QtWidgets.QTextBrowser(self.centralwidget)
+        self.chatbox.setGeometry(QtCore.QRect(10, 10, 781, 501))
+        self.chatbox.setObjectName("Chatbox")
+        self.msgArea = QtWidgets.QLineEdit(self.centralwidget)
+        self.msgArea.setGeometry(QtCore.QRect(10, 570, 640, 50))
+        self.msgArea.setObjectName("msgArea")
+        self.butChat = QtWidgets.QPushButton(self.centralwidget)
+        self.butChat.setGeometry(QtCore.QRect(660, 570, 125, 50))
+        self.butChat.setObjectName("butChat")
+        self.butState = QtWidgets.QPushButton(self.centralwidget)
+        self.butState.setGeometry(QtCore.QRect(10, 520, 100, 40))
+        self.butState.setObjectName("butState")
+        self.butHelp = QtWidgets.QPushButton(self.centralwidget)
+        self.butHelp.setGeometry(QtCore.QRect(130, 520, 110, 40))
+        self.butHelp.setObjectName("butHelp")
+        self.butEdit = QtWidgets.QPushButton(self.centralwidget)
+        self.butEdit.setGeometry(QtCore.QRect(260, 520, 120, 40))
+        self.butEdit.setObjectName("butEdit")
+        self.listUser = QtWidgets.QListWidget(self.centralwidget)
+        self.listUser.setGeometry(QtCore.QRect(800, 10, 181, 611))
+        self.listUser.setObjectName("listUser")
+        TchatDNC.setCentralWidget(self.centralwidget)
+        self.statusbar = QtWidgets.QStatusBar(TchatDNC)
         self.statusbar.setObjectName("statusbar")
-        MainWindow.setStatusBar(self.statusbar)
+        TchatDNC.setStatusBar(self.statusbar)
 
-        self.retranslateUi(MainWindow)
-        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+        self.retranslateUi(TchatDNC)
+        QtCore.QMetaObject.connectSlotsByName(TchatDNC)
 
-    def retranslateUi(self, MainWindow):
+    def retranslateUi(self, TchatDNC):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        self.pushButton.setText(_translate("MainWindow", "Envoyez"))
+        TchatDNC.setWindowTitle(_translate("TchatDNC", "MainWindow"))
+        self.butChat.setText(_translate("TchatDNC", "Send"))
+        self.butState.setText(_translate("TchatDNC", "Online"))
+        self.butHelp.setText(_translate("TchatDNC", "Command list"))
+        self.butEdit.setText(_translate("TchatDNC", "Change nickname"))
 
 
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
-    MainWindow = QtWidgets.QMainWindow()
-    ui = Ui_MainWindow()
-    ui.setupUi(MainWindow)
-    MainWindow.show()
+    TchatDNC = QtWidgets.QMainWindow()
+    ui = Ui_TchatDNC()
+    ui.setupUi(TchatDNC)
+    TchatDNC.show()
     sys.exit(app.exec_())

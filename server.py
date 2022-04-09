@@ -109,7 +109,7 @@ class Server:
             nickname = client.recv(1024).decode('ascii')
             self.clients[client] = nickname
             print(f'Nickname of the client is {nickname} !')
-            self.broadcast(f'{nickname} joined the chat! ')
+            self.broadcast(f'206: {nickname} joined the chat! ')
             self.etat=True              
         
             thread = threading.Thread(target=self.handle,args=(client,))
@@ -234,7 +234,7 @@ class Server:
             message=f'409 : {newNick} is already taken'
             client.send(message.encode())
         else:       
-            self.broadcast(f'200 : {self.clients[client]} is now {newNick}')
+            self.broadcast(f'208 : {self.clients[client]} is now {newNick}')
             for key in self.clients:
                 if key == client:
                 #if self.Connected[i]==self.clients[client]:
@@ -261,12 +261,12 @@ class Server:
 
 
     def quit(self,client):
-        message="200 : you have been disconnected"
+        message="207 : you have been disconnected"
         client.send(message.encode())
         #self.Connected.remove(self.clients[client])
         name = self.clients[client]
         del self.clients[client]
-        self.broadcast(f'200 : {name} disconnected')
+        self.broadcast(f'207 : {name} disconnected')
         self.client.close()
         
 
