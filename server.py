@@ -17,6 +17,7 @@ class Server:
         self.away=[]
         self.commands=["QUIT","CHAT","ABS","BACK","LIST","EDIT","REFUSE","SEND","TELL","STOP","SFIC","ACCEPT","HELP"]
         self.definitions=["logout the user","send a message publically","Changes the state of the user from abs to away"]
+        self.commandes = {"QUIT":"Logout to the server","CHAT":"Helps you send message to all connected clients","ABS":"Changes the state of the user to away(means you can't send messages but you can receive)","BACK":"changes the state of the user from away to active","LIST":"display every user connected","EDIT new nickname":"changes the user's nickname if new one is not already taken","REFUSE nickname":"Helps to refuse a request of having a private chat with the user who sent it","SEND nickname" : "sends a request of having a private chat with another user","TELL nickname message": "sends a private message to the other user once they accepted to have a private chat","STOP nickname": "Stops a private chat between two users","SFIC nickname file":"sends a file once the other user accepts to receive ","ACCEPT nickname.. port... address ...": "accepts a request of having a private chat if its only the nickname of the user that is given in arguments and if the port and the address are also given it will accept to receive a file from the user","HELP":"displays a list of all commands and their definitions"}
         #self.com = [["quit","LOGOUT THE USER"],["CHAT","blabla"]]
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -303,10 +304,9 @@ class Server:
 
     def liste_commandes(self,client):
         #ex=print(*self.commands,sep=", ")
-        s=" ,".join(self.commands)
-        print(s)
-        message=f'202 : {s}'
-        client.send(message.encode())
+        for key,value in self.commandes.items():
+            print(f"202 {key}: {value}")
+            client.send(f"202 {key}: {value} \n".encode())
         #print(tabulate(self.com, headers=["command","definition"]))
 
 
