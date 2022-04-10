@@ -12,6 +12,8 @@ class Server:
         self.address = config.get("settings", "address")
         self.port = int(config.get("settings", "port"))
         self.clients=dict()
+        self.private=dict()
+        self.request=dict()
         self.away=[]
         self.commands=["QUIT","CHAT","ABS","BACK","LIST","EDIT","REFUSE","SEND","TELL","STOP","SFIC","ACCEPT","HELP"]
         self.definitions=["logout the user","send a message publically","Changes the state of the user from abs to away"]
@@ -52,6 +54,9 @@ class Server:
                     msg = message.split(" ",1)
                     self.broadcast("200 : " + self.clients[client] + " : " + commande[2])
 
+                elif commande[1] == 'STOP':
+                    self.stop(commande[2],client)
+
                 elif commande[1] == 'SEND':
                     print(f'mon tableau: {commande} et sa taille: {len(commande)}')
 
@@ -61,13 +66,14 @@ class Server:
                         client.send("418 : Missing parameter".encode())
                     else:
                         self.send(client,commande[2])
+                elif commande_de_tell[1] == 'TELL':
+                    self.tell(commande_de_tell[2],commande_de_tell[3],client)
 
                 elif commande[1] == 'REFUSE':
-                    print(f'mon tableau: {commande} et sa taille: {len(commande)}')
                     if len(commande) < 3:
-                        client.send("418 : Missing parameter".encode())
+                        client.send("Missing parameter".encode())
                     elif commande[2] == '':
-                        client.send("418 : Missing parameter".encode())
+                        client.send("Missing parameter".encode())
                     else:
                         self.refuse(client,commande[2])
 
@@ -135,94 +141,144 @@ class Server:
                     message="403 : you can't send messages"
             except:
                 print("an error")
-
-        
+    
     def send(self,client,receiver):
+        print("here")
         if receiver in self.clients.values():
             if receiver == self.clients[client]:
-                message = f"{self.clients[client]} is you, that means you can't have a private chat with yourself"
+                message = f"419 : {self.clients[client]} you can't have a private chat with yourself"
                 client.send(message.encode())
             else:
-                message = f"{self.clients[client]} wants to have a private a chat with you.respond with ACCEPT to accept the request or REFUSE to refuse"
                 for key, valeur in self.clients.items(): 
                     if receiver == valeur: 
                         receiver_sock = key
-                while True:
-                    try:
-                        next_msg = client.recv(1024).decode("ascii")
-                        if nxt_msg == 'hm':
-                            print("hm")
-                        else:
-                            print("no hm")
-                    except:
-                        print("an error")
+                        thread = threading.Thread(target=self.handle,args=(receiver_sock,))
+                        thread.start()
+                        message = f"100 : {self.clients[client]} wants to have a private a chat with you."
+                        receiver_sock.send(message.encode())
                 receiver_sock.send(message.encode())
+                print(self.clients[client])
+                print(self.clients[receiver_sock])
+                self.request[client] = self.clients[client]
+                self.request[receiver_sock] = self.clients[receiver_sock]
 
         else:
-            print(f"408 {receiver} doesn't exist")
-            message = f"408 {receiver} doesn't exist"
+            print(f"408 : {receiver} doesn't exist")
+            message = f"408 : {receiver} doesn't exist"
             client.send(message.encode())
         
 
-    '''def refuse(self,client_to_respond,client_receiving_response):
-            
-                if client_receiving_response in self.clients.values():
-                    if client_receiving_response == self.clients[client_to_respond]:
-                        message = f"{self.clients[client_to_respond]} is you, that means you can't use this command to yourself"
-                        client_to_respond.send(message.encode())
-                        
-                    else:
-                        message = f"{self.clients[client_to_respond]} refused to have a private chat with you."
-                        for key, valeur in self.clients.items(): 
-                            if client_receiving_response == valeur: 
-                                client_receiving_response_sock = key 
-
-                        client_receiving_response_sock.send(message.encode())
-                else:
-                    print(f"408 {client_receiving_response} doesn't exist")
-                    message = f"408 {client_receiving_response} doesn't exist"
+    def refuse(self,client_to_respond,client_receiving_response):
+        if client_receiving_response in self.clients.values():
+            if client_receiving_response in self.request.values():
+                if client_receiving_response == self.clients[client_to_respond]:
+                    message = f"419 : {self.clients[client_to_respond]} you can't use this command to yourself"
                     client_to_respond.send(message.encode())
+                else:
+                    message = f"200 : {self.clients[client_to_respond]} refused to have a private chat with you."
+                    message2 = f"200 : you refused the request of {client_receiving_response}"
+                    for key, valeur in self.clients.items(): 
+                        if client_receiving_response == valeur: 
+                            client_receiving_response_sock = key
+                            del self.request[client_receiving_response_sock]
+                            del self.request[client_to_respond]
+                            #print(self.private)
+                            #print(self.clients[client_to_respond])
+                            #print(client_receiving_response)
+                    client_receiving_response_sock.send(message.encode())
+                    client_to_respond.send(message2.encode())
+            else:
+                msg = "400 : you don't have any resquest to refuse"
+                client_to_respond.send(msg.encode())
+        else:
+            print(f"408 {client_receiving_response} doesn't exist")
+            message = f"408 {client_receiving_response} doesn't exist"
+            client_to_respond.send(message.encode())
             
 
         
 
-        def accept(self,client_to_respond,client_receiving_response):
-            if client_receiving_response in self.clients.values():
+    def accept(self,client_to_respond,client_receiving_response):
+        if client_receiving_response in self.clients.values():
+            if client_receiving_response in self.request.values():
                 if client_receiving_response == self.clients[client_to_respond]:
-                    message = f"{self.clients[client_to_respond]} is you, that means you can't use this command to yourself"
+                    message = f"419 : {self.clients[client_to_respond]} you can't use this command to yourself"
                     client_to_respond.send(message.encode())
-                
+                    
                 else:
-                    message = f"{self.clients[client_to_respond]} accepted to have a private chat with you."
+                    message = f"200 : {self.clients[client_to_respond]} accepted to have a private chat with you."
+                    message2 = f"200 : you accepted the private chat of {client_receiving_response}"
                     for key, valeur in self.clients.items(): 
                         if client_receiving_response == valeur: 
-                            client_receiving_response_sock = key 
+                            client_receiving_response_sock = key
+                            self.private[client_to_respond] = self.clients[client_to_respond]
+                            self.private[client_receiving_response_sock] = self.clients[client_receiving_response_sock]
+                            del self.request[client_receiving_response_sock]
+                            del self.request[client_to_respond]
+                            #print(self.private)
+                            #print(self.clients[client_to_respond])
+                            #print(client_receiving_response)
 
                     client_receiving_response_sock.send(message.encode())
             else:
-                print(f"408 {client_receiving_response} doesn't exist")
-                message = f"408 {client_receiving_response} doesn't exist"
-                client_to_respond.send(message.encode())'''
-    def tell(self,sender,receiver,message):
-
-        if receiver in self.clients.values():
-            if receiver == self.clients[sender]:
-                message = f"{self.clients[sender]} is you, that means you can't send yourself a message"
-                sender.send(message.encode())
-            else:
-                #message = f"{self.clients[sender]} wants to have a private a chat with you.respond with ACCEPT to accept the request or REFUSE to refuse"
-                sender_name = f"{self.clients[sender]} : "
-                for key, valeur in self.clients.items(): 
-                    if receiver == valeur: 
-                        receiver_sock = key 
-
-                receiver_sock.send(sender_name.encode() + message.encode())
+                msg = "400 : you don't have any resquest to accept"
+                client_to_respond.send(msg.encode())
 
         else:
-            print(f"408 {receiver} doesn't exist")
-            message = f"408 {receiver} doesn't exist"
-            sender.send(message.encode())
+            print(f"408 {client_receiving_response} doesn't exist")
+            message = f"408 {client_receiving_response} doesn't exist"
+            client_to_respond.send(message.encode())
 
+
+    def tell(self,client_to_respond,message,client):
+        if client_to_respond in self.clients.values():
+            if client_to_respond in self.private.values():
+                for key, valeur in self.private.items(): 
+                    if client_to_respond == valeur: 
+                        client_receiving_response_sock = key
+                        if client_receiving_response_sock == client:
+                            msg = "419 : you cant send a message to yourself"
+                            client_receiving_response_sock.send(msg.encode())
+                        else:
+                            msg = f"{self.private[client]} : {message}"
+                            client_receiving_response_sock.send(msg.encode())
+                        #client_receiving_response_sock.send(message.encode())
+            elif self.clients[client] == client_to_respond:
+                msg = "419 : you cant send a message to yourself"
+                client.send(msg.encode())
+            else:
+                msg = "400 : you need to send a request first"
+                client.send(msg.encode())
+        else:
+            msg = "408 : client doesnt exist"
+            client.send(msg.encode())
+
+
+    def stop(self,sender,client):
+        if sender in self.clients.values():
+            if sender in self.private.values():
+                if self.clients[client] == sender:
+                        message = "419 : you can't use this command to yourself"
+                        client.send(message.encode())
+                elif sender in self.private.values() and self.clients[client] in self.private.values():
+                    message=f'206 : you stopped the private chat with {sender}'
+                    client.send(message.encode())
+                    del self.private[client]
+                    for key, valeur in self.private.items(): 
+                            if sender == valeur: 
+                                sender_sock = key
+                    message2=f'206 : {self.clients[client]} stopped the private chat with u'
+                    sender_sock.send(message2.encode())
+                    del self.private[sender_sock]
+                else:
+                    message=f'410 : There is no private chat between you and {sender}'
+                    client.send(message.encode())
+            else:
+                msg = "400 : the execution failed"
+                client.send(msg.encode())
+        else:
+            msg = "408 : client doesnt exist"
+            client.send(msg.encode())
     
 
     def connect(self,client):
