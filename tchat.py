@@ -12,26 +12,29 @@ class Tchat(QMainWindow, Ui_TchatDNC):
     def __init__(self, parent = None):
         QMainWindow.__init__(self, parent)
         connexion = ConnDialog()
+
         if connexion.exec_() == QDialog.Accepted:
             val = connexion.getVal()
         self.user = Client(val["nickname"], val["address"], val["port"])
         self.user.connect()
+
         self.setupUi(self)
         self.setWindowTitle("DNC Chat")
         self.msgArea.returnPressed.connect(self.chat)
+
         self.butChat.clicked.connect(self.chat)
         self.butState.clicked.connect(self.change_state)
         self.butHelp.clicked.connect(lambda: self.use_command("HELP"))
         self.butEdit.clicked.connect(self.new_nickname)
-        #self.butList.clicked.connect(lambda: self.use_command("LIST"))
+
         self.listUser.installEventFilter(self)
         self.threadRec = threading.Thread(target = self.receive)
         self.threadRec.start()
 
-    def use_command(self, command, args = None):
-        message = self.user.nickname + ": " + command + " "
-        if args != None:
-            message += args
+    def use_command(self, command, *args):
+        message = self.user.nickname + ": " + command
+        for arg in args:
+            message += " " + arg
         self.user.client.send(message.encode())
 
     def update_list(self):
@@ -40,8 +43,13 @@ class Tchat(QMainWindow, Ui_TchatDNC):
         message = reponse.split(":",1)[1].strip()
 
         self.listUser.clear()
+        self.sendTo.clear()
+        self.sendTo.addItem("Everyone")
+        self.sendTo.setCurrentIndex(0)
         for user in message.split(","):
-            self.listUser.addItem(user)
+            self.listUser.addItem(user.strip())
+            if(user.strip() != self.user.nickname):
+                self.sendTo.addItem(user)
 
     def new_nickname(self):
         newNick, ok = QInputDialog.getText(self,"New nickname","Please enter your new nickname :")
@@ -51,9 +59,11 @@ class Tchat(QMainWindow, Ui_TchatDNC):
     def chat(self):
         msg = self.msgArea.text().strip()
         if( len(msg) != 0):
-            self.use_command("CHAT", msg)
+            if(self.sendTo.currentText() == "Everyone"):
+                self.use_command("CHAT", msg)
+            else:
+                self.use_command("TELL", self.sendTo.currentText(), msg)
             self.msgArea.clear()
-
 
     def change_state(self):
         if(self.butState.text()=="Online"):
@@ -75,21 +85,35 @@ class Tchat(QMainWindow, Ui_TchatDNC):
 
                 else:
                     code = reponse.split(":",1)[0].strip()
-                    message = reponse.split(":",1)[1].strip()
+                    message = '<p style= "color: white">' + reponse.split(":",1)[1].strip() + '</p>'
 
                     if (code.startswith("2")):
+                        if(code == "207" and message.startswith("you")):
+                            break
+
                         if(code == "206" or code == "207" or code == "208"):
                             self.update_list()
                         
+                        if (code == "210"):
+                            message = '<p style= "color: purple">' + reponse.split(":",1)[1].strip() + '</p>'
+
                         self.chatbox.append(message)
+
+                    if (code.startswith("1")):
+                        request = QMessageBox()
+                        request.setText(message)
+                        request.setWindowTitle("Request")
+                        request.exec()
 
                     if (code.startswith("4")):
                         alert = QMessageBox()
                         alert.setText(message)
                         alert.setWindowTitle("Error")
+                        alert.setIcon(QMessageBox.Critical)
                         alert.exec()
 
             except:
+                print(reponse)
                 print("an error has occured!")
                 self.use_command("QUIT")
                 break
@@ -98,7 +122,8 @@ class Tchat(QMainWindow, Ui_TchatDNC):
     def closeEvent(self , event):
         self.use_command("QUIT")
         for thread in threading.enumerate():
-            thread.join()
+            if thread != threading.main_thread(): thread.join()
+        self.close()
 
     #Gestion sous-menu de la liste des utilisateurs
     def eventFilter(self, source, event):
@@ -106,24 +131,38 @@ class Tchat(QMainWindow, Ui_TchatDNC):
             menu = QMenu()
             privatechatAction = QAction("Send private chat request")
             sendfileAction = QAction("Send file request")
+            acceptAction = QAction("Accept a request")
+            refuseAction = QAction("Refuse a request")
+            stopAction = QAction("Stop a private chat")
+
             menu.addAction(privatechatAction)
             menu.addAction(sendfileAction)
+            menu.addAction(acceptAction)
+            menu.addAction(refuseAction)
+            menu.addAction(stopAction)
 
             action = menu.exec(event.globalPos())
             
-            try:
-                userclicked = source.itemAt(event.pos())
-            except:
-                print("wsh t nul")
+            
+            userclicked = source.itemAt(event.pos())
+            
+            if userclicked != None:
+                if action == privatechatAction:
+                    self.use_command("SEND", userclicked.text().strip())
+                
+                if action == sendfileAction:
+                    print("SFIC " + userclicked.text() )
 
-            if action == privatechatAction:
-                print("SEND " + userclicked.text() )
-                self.use_command("SEND", userclicked.text())
-            
-            if action == sendfileAction:
-                print("SFIC " + userclicked.text() )
-            
-            return True
+                if action == acceptAction:
+                    self.use_command("ACCEPT", userclicked.text().strip())
+
+                if action == refuseAction:
+                    self.use_command("REFUSE", userclicked.text().strip())
+                
+                if action == stopAction:
+                    self.use_command("STOP", userclicked.text().strip())
+                
+                return True
         return super().eventFilter(source,event)
 
 

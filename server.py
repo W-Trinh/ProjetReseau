@@ -155,8 +155,8 @@ class Server:
                         thread = threading.Thread(target=self.handle,args=(receiver_sock,))
                         thread.start()
                         message = f"100 : {self.clients[client]} wants to have a private a chat with you."
+                        print("Allo")
                         receiver_sock.send(message.encode())
-                receiver_sock.send(message.encode())
                 print(self.clients[client])
                 print(self.clients[receiver_sock])
                 self.request[client] = self.clients[client]
@@ -225,8 +225,8 @@ class Server:
                 client_to_respond.send(msg.encode())
 
         else:
-            print(f"408 {client_receiving_response} doesn't exist")
-            message = f"408 {client_receiving_response} doesn't exist"
+            print(f"408 : {client_receiving_response} doesn't exist")
+            message = f"408 : {client_receiving_response} doesn't exist"
             client_to_respond.send(message.encode())
 
 
@@ -240,7 +240,7 @@ class Server:
                             msg = "419 : you cant send a message to yourself"
                             client_receiving_response_sock.send(msg.encode())
                         else:
-                            msg = f"{self.private[client]} : {message}"
+                            msg = f"210 : {self.private[client]} : {message}"
                             client_receiving_response_sock.send(msg.encode())
                         #client_receiving_response_sock.send(message.encode())
             elif self.clients[client] == client_to_respond:

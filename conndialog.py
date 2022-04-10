@@ -36,5 +36,5 @@ class ConnDialog(QDialog):
         self.setLayout(self.layout)
 
     def getVal(self):
-        val = {"nickname" : self.txtNick.text(), "address" : self.txtAdr.text(), "port" : int(self.txtPort.text())}
+        val = {"nickname" : self.txtNick.text().strip(), "address" : self.txtAdr.text(), "port" : int(self.txtPort.text())}
         return val
