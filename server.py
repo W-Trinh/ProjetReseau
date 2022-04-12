@@ -36,69 +36,70 @@ class Server:
         while boo:
             try:
                 message = client.recv(1024).decode("ascii")
-                commande = message.split(" ",2)
-                commande_de_tell = message.split(" ",3)
+                commande = message.split(" ",1)
+                commande_de_tell = message.split(" ",2)
+                print(commande)
                 #print(client)
-                if commande[1] == 'QUIT':
+                if commande[0] == 'QUIT':
                     self.quit(client)
                     boo = False
-                elif commande[1] == 'LIST':
+                elif commande[0] == 'LIST':
                     self.liste_clients(client)
 
-                elif commande[1] == 'HELP':
+                elif commande[0] == 'HELP':
                     self.liste_commandes(client)
 
-                elif commande[1] == 'EDIT':
-                    self.verify_nickname(commande[2],client)
+                elif commande[0] == 'EDIT':
+                    self.verify_nickname(commande[1],client)
 
-                elif commande[1] == 'CHAT':
+                elif commande[0] == 'CHAT':
                     msg = message.split(" ",1)
-                    self.broadcast("200 : " + self.clients[client] + " : " + commande[2])
+                    self.broadcast("200 : " + self.clients[client] + " : " + commande[1])
 
-                elif commande[1] == 'STOP':
-                    self.stop(commande[2],client)
+                elif commande[0] == 'STOP':
+                    self.stop(commande[1],client)
 
-                elif commande[1] == 'SEND':
+                elif commande[0] == 'SEND':
                     print(f'mon tableau: {commande} et sa taille: {len(commande)}')
-
-                    if len(commande) < 3:
+                    print(commande)
+                    if len(commande) < 2:
                         client.send("418 ! Missing parameter".encode())
-                    elif commande[2] == " ":
+                    elif commande[1] == " ":
                         client.send("418 : Missing parameter".encode())
                     else:
-                        self.send(client,commande[2])
-                elif commande_de_tell[1] == 'TELL':
-                    self.tell(commande_de_tell[2],commande_de_tell[3],client)
+                        self.send(client,commande[1])
+                elif commande_de_tell[0] == 'TELL':
+                    self.tell(commande_de_tell[1],commande_de_tell[2],client)
 
-                elif commande[1] == 'REFUSE':
-                    if len(commande) < 3:
+                elif commande[0] == 'REFUSE':
+                    if len(commande) < 2:
                         client.send("Missing parameter".encode())
-                    elif commande[2] == '':
+                    elif commande[1] == '':
                         client.send("Missing parameter".encode())
                     else:
-                        self.refuse(client,commande[2])
+                        self.refuse(client,commande[1])
 
 
-                elif commande[1] == 'CONNECT':
+                elif commande[0] == 'CONNECT':
                     pass
 
-                elif commande[1] == 'ABS':
+                elif commande[0] == 'ABS':
                     self.absent(client)
 
-                elif commande[1] == 'BACK':
+                elif commande[0] == 'BACK':
                     message="418 : You are already online"
                     client.send(message.encode())
                     
-                elif commande[1] == 'ACCEPT':
-                    if len(commande) < 3:
+                elif commande[0] == 'ACCEPT':
+                    if len(commande) < 2:
                         client.send("Missing parameter".encode())
-                    elif commande[2] == '':
+                    elif commande[1] == '':
                         client.send("Missing parameter".encode())
                     else:
-                        self.accept(client,commande[2])
+                        self.accept(client,commande[1])
 
 
-                elif commande[1] == 'SFIC':
+                elif commande[0] == 'SFIC':
                     self.send_file(client)
 
                 else:
@@ -131,14 +132,14 @@ class Server:
         while True:
             try:
                 next_msg = client.recv(1024).decode("ascii")
-                nxt = next_msg.split(" ",2)
-                if nxt[1] == 'BACK':
+                nxt = next_msg.split(" ",1)
+                if nxt[0] == 'BACK':
                     self.broadcast(f'200 : {self.clients[client]} is back')
                     break
-                elif nxt[1] == "ABS":
+                elif nxt[0] == "ABS":
                     message="417 : You are already away"
                     client.send(message.encode())
-                elif nxt[1] == "CHAT":
+                elif nxt[0] == "CHAT":
                     message="403 : you can't send messages"
             except:
                 print("an error")

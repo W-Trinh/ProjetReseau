@@ -32,7 +32,7 @@ class Tchat(QMainWindow, Ui_TchatDNC):
         self.threadRec.start()
 
     def use_command(self, command, *args):
-        message = self.user.nickname + ": " + command
+        message = command
         for arg in args:
             message += " " + arg
         self.user.client.send(message.encode())
@@ -43,9 +43,11 @@ class Tchat(QMainWindow, Ui_TchatDNC):
         message = reponse.split(":",1)[1].strip()
 
         self.listUser.clear()
+
         self.sendTo.clear()
         self.sendTo.addItem("Everyone")
         self.sendTo.setCurrentIndex(0)
+
         for user in message.split(","):
             self.listUser.addItem(user.strip())
             if(user.strip() != self.user.nickname):
@@ -55,6 +57,7 @@ class Tchat(QMainWindow, Ui_TchatDNC):
         newNick, ok = QInputDialog.getText(self,"New nickname","Please enter your new nickname :")
         if ok:
             self.use_command("EDIT", newNick)
+            self.user.nickname = newNick
 
     def chat(self):
         msg = self.msgArea.text().strip()
@@ -76,19 +79,22 @@ class Tchat(QMainWindow, Ui_TchatDNC):
             self.use_command("BACK")
 
     def receive(self):
+        gaveNick = False
         while True:
             self.chatbox.moveCursor(QTextCursor.End)
             try:
                 reponse = self.user.client.recv(1024).decode('ascii')
-                if reponse == "nickname?":
+
+                if not gaveNick:
                     self.user.client.send(self.user.nickname.encode('utf-8'))
+                    gaveNick = True
 
                 else:
                     code = reponse.split(":",1)[0].strip()
                     message = '<p style= "color: white">' + reponse.split(":",1)[1].strip() + '</p>'
 
                     if (code.startswith("2")):
-                        if(code == "207" and message.startswith("you")):
+                        if(code == "207" and reponse.split(":",1)[1].strip().startswith("you")):
                             break
 
                         if(code == "206" or code == "207" or code == "208"):
@@ -108,6 +114,7 @@ class Tchat(QMainWindow, Ui_TchatDNC):
                     if (code.startswith("4")):
                         alert = QMessageBox()
                         alert.setText(message)
+                  
                         alert.setWindowTitle("Error")
                         alert.setIcon(QMessageBox.Critical)
                         alert.exec()
