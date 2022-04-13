@@ -78,6 +78,39 @@ class Tchat(QMainWindow, Ui_TchatDNC):
             self.butEdit.setEnabled(True)
             self.use_command("BACK")
 
+    def accept_file(self, addr, port):
+        """
+        socketRecv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        socketRecv.bind(addr, port)
+        socketRecv.listen()
+
+        client, address = socketRecv.accept()
+
+        fic = open(file,"wb")
+        while(True):
+            line = client.recv(1024)
+            while(line):
+                fic.write(l)
+                line = client.recv(1024)
+        fic.close()
+        client.close()
+        socketRecv.close()
+        """
+    def send_file(self, addr, port, file):
+        """
+        socketSend = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        socketSend.connect(addr, port)
+        socketSend.send()
+
+        fic = open(file,"rb")
+        line = fic.read(1024)
+        while(line):
+            socketSend.send(line)
+            l = fic.read(1024)
+        
+        socketSend.close()
+        """
+
     def receive(self):
         gaveNick = False
         while True:
@@ -100,7 +133,7 @@ class Tchat(QMainWindow, Ui_TchatDNC):
                         if(code == "206" or code == "207" or code == "208"):
                             self.update_list()
                         
-                        if (code == "210"):
+                        if (code == "205"):
                             message = '<p style= "color: purple">' + reponse.split(":",1)[1].strip() + '</p>'
 
                         self.chatbox.append(message)
@@ -137,10 +170,13 @@ class Tchat(QMainWindow, Ui_TchatDNC):
         if event.type() == QtCore.QEvent.ContextMenu and source is self.listUser:
             menu = QMenu()
             privatechatAction = QAction("Send private chat request")
-            sendfileAction = QAction("Send file request")
-            acceptAction = QAction("Accept a request")
-            refuseAction = QAction("Refuse a request")
+            acceptAction = QAction("Accept a private chat")
+            refuseAction = QAction("Refuse a private chat")
             stopAction = QAction("Stop a private chat")
+            sendfileAction = QAction("Send file request")
+            acceptfileAction = QAction("Accept a file download")
+            refusefileAction = QAction("Refuse a file download")
+
 
             menu.addAction(privatechatAction)
             menu.addAction(sendfileAction)
