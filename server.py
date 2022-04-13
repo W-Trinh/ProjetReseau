@@ -16,6 +16,7 @@ class Server:
         self.clients=dict()
         self.private=dict()
         self.request=dict()
+        self.files_request = dict()
         self.away=[]
         #self.commands=["QUIT","CHAT","ABS","BACK","LIST","EDIT","REFUSE","SEND","TELL","STOP","SFIC","ACCEPT","HELP"]
         #self.definitions=["logout the user","send a message publically","Changes the state of the user from abs to away"]
@@ -39,7 +40,6 @@ class Server:
             try:
                 message = client.recv(1024).decode("ascii")
 
-                
                 print(message)
                 
                 logging.info(f'{self.clients[client]} : {message}')
@@ -92,11 +92,11 @@ class Server:
                     else:
                         self.refuse(client,commande[1])
                         
-                 elif commande_de_sfic[1] == 'REFUSEFILE':
-                    self.refuseFile(commande_de_sfic[2],commande_de_sfic[3],commande_de_sfic[4],commande_de_sfic[5],client)
+                elif commande_de_sfic[0] == 'REFUSEFILE':
+                    self.refuseFile(commande_de_sfic[1],client)
                  
-                 elif commande_de_sfic[1] == 'ACCEPTFILE' and len(commande_de_sfic)>4:
-                    self.acceptFile(commande_de_sfic[2],commande_de_sfic[3],commande_de_sfic[4],commande_de_sfic[5],client)
+                elif commande_de_sfic[0] == 'ACCEPTFILE' and len(commande_de_sfic)>3:
+                    self.acceptFile(commande_de_sfic[1],commande_de_sfic[2],commande_de_sfic[3],commande_de_sfic[4],client)
 
 
                 elif commande[0] == 'CONNECT':
@@ -122,7 +122,8 @@ class Server:
 
 
                 elif commande[0] == 'SFIC':
-                    self.send_file(client)
+                    argument = commande[1].split(" ")
+                    self.send_file(argument[0], argument[1], client)
 
                 else:
                     client.send('404 : the command was not found'.encode('ascii'))
@@ -284,7 +285,7 @@ class Server:
                             logging.info(msg)
                             client_receiving_response_sock.send(msg.encode())
                         else:
-                            msg = f"210 : {self.private[client]} : {message}"
+                            msg = f"205 : {self.private[client]} : {message}"
                             logging.info(msg)
                             client_receiving_response_sock.send(msg.encode())
                         #client_receiving_response_sock.send(message.encode())
@@ -338,10 +339,25 @@ class Server:
     def connect(self,client):
         pass
 
-    def send_file(self,client):
-        message="which file do you want to send : "
-        logging.info(message)
-        client.send(message.encode())
+    def send_file(self,receiver,fichier,client):
+        if receiver in self.clients.values():
+            if receiver == self.clients[client]:
+                message = f"419 : you can't send a file to yourself"
+                client.send(message.encode())
+            else:
+                for key, valeur in self.clients.items(): 
+                    if receiver == valeur : 
+                        receiver_sock = key
+                        message = f"100 : {self.clients[client]} wants to send you a file."
+                        receiver_sock.send(message.encode())
+                self.files_request[client] = self.clients[client]
+                self.files_request[receiver_sock] = self.clients[receiver_sock]
+                print(self.files_request)
+
+        else:
+            print(f"408 : {receiver} doesn't exist")
+            message = f"408 : {receiver} doesn't exist"
+            client.send(message.encode())
 
     def verify_nickname(self,newNick,client):
         if newNick in self.clients.values():
@@ -358,7 +374,7 @@ class Server:
                     #print(f'verify:{self.clients}')
 
 
-     def liste_commandes(self,client):
+    def liste_commandes(self,client):
         #ex=print(*self.commands,sep=", ")
         for key,value in self.commandes.items():
             print(f"202 {key}: {value}")
@@ -366,51 +382,28 @@ class Server:
             logging.info(f"202 {key}: {value} \n".encode())
             
             
-     def acceptFile(self,client_receiving_response,file,port,address,client):
+    def acceptFile(self,client_receiving_response,filename,port,address,client):
         print("preparing to accept")
-        print(self.files_request)
         if client_receiving_response in self.clients.values():
             if client_receiving_response in self.files_request.values():
                 if client_receiving_response == self.clients[client]:
                     message = f"419 : you can't use this command to yourself"
                     client.send(message.encode())
-                else:
-                    message = f"201 : {self.clients[client]} accepted your request"
-                    message2 = f"201 : you accepted the file  of {client_receiving_response}"
-                    for key, valeur in self.clients.items(): 
-                        if client_receiving_response == valeur:
-                            client_receiving_response_sock = key
-                            #path = '/home/amal/Bureau/test.txt'
-                            #basename=os.path.basename(path)
-                            #print(basename)
-                            #socksock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                            #socksock.bind((address,port))
-                            #conn,add = socksock.accept()
-                            with open(basename, "wb") as f:
-                                while True:
-                                    bytes_read = client.recv(1024)
-                                    message = "sent"
-                                    client.send(message.encode())
-                                    if not bytes_read:
-                                        message = "oof"
-                                        client.send(message.encode())
-                                        break
-                                    f.write(bytes_read)
-                                    message = "oula"
-                                    client.send(message.encode())
 
+                else:
+                    message = f"210 : {self.clients[client]} accepted the download : {address} , {port} , {filename}"
+                    message2 = f"210 : you accepted the file of {client_receiving_response}"
+                    for key, valeur in self.clients.items(): 
+                        if client_receiving_response == valeur: 
+                            client_receiving_response_sock = key
                             del self.files_request[client_receiving_response_sock]
                             del self.files_request[client]
 
 
                     client_receiving_response_sock.send(message.encode())
-                    '''
-                    filename = 'Bureau/test.txt'
-                    filename = os.path.basename(filename)
-                    print(filename)
-                    '''
+                    client.send(message2.encode())
             else:
-                msg = "400 : you don't have any resquest to accept"
+                msg = "400 : you don't have any request to refuse"
                 client.send(msg.encode())
 
         else:
@@ -419,9 +412,8 @@ class Server:
             client.send(message.encode())
 
             
-     def refuseFile(self,client_receiving_response,file,port,address,client):
+    def refuseFile(self,client_receiving_response,client):
         print("preparing to REFUSE")
-        print(self.files_request)
         if client_receiving_response in self.clients.values():
             if client_receiving_response in self.files_request.values():
                 if client_receiving_response == self.clients[client]:
@@ -429,8 +421,8 @@ class Server:
                     client.send(message.encode())
                 else:
 
-                    message = f"201 : {self.clients[client]} refused your request"
-                    message2 = f"201 : you refused the file  of {client_receiving_response}"
+                    message = f"200 : {self.clients[client]} refused your request"
+                    message2 = f"200 : you refused the file  of {client_receiving_response}"
                     for key, valeur in self.clients.items(): 
                         if client_receiving_response == valeur: 
                             client_receiving_response_sock = key
