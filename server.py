@@ -376,14 +376,26 @@ class Server:
             message=f'409 : {newNick} is already taken'
             logging.info(message)
             client.send(message.encode())
-        else:       
+        else:   
+            oldNick = self.clients[client]
             self.broadcast(f'208 : {self.clients[client]} is now {newNick}')
             logging.info('208 : {self.clients[client]} is now {newNick}')
             for key in self.clients:
                 if key == client:
-                #if self.Connected[i]==self.clients[client]:
                     self.clients[client]=newNick
-                    #print(f'verify:{self.clients}')
+                    
+                    
+             if oldNick in self.request.values():
+                print("je suis entrée dans le if des request")
+                for key in self.request:
+                    if key == client:
+                        self.request[client] = newNick
+                        
+              if oldNick in self.private.values():
+                 for key in self.private:
+                    if key == client:
+                        self.private[client] = newNick         
+              
 
 
      def liste_commandes(self,client):
