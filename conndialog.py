@@ -1,5 +1,6 @@
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QVBoxLayout, QLineEdit, QLabel
+import socket
 
 class ConnDialog(QDialog):
     def __init__(self):
@@ -10,7 +11,7 @@ class ConnDialog(QDialog):
         QBtn = QDialogButtonBox.Cancel | QDialogButtonBox.Ok
 
         self.buttonBox = QDialogButtonBox(QBtn)
-        self.buttonBox.accepted.connect(self.accept)
+        self.buttonBox.accepted.connect(self.verifyVal)
         self.buttonBox.rejected.connect(self.reject)
 
         self.layout = QVBoxLayout()
@@ -34,6 +35,36 @@ class ConnDialog(QDialog):
 
         self.layout.addWidget(self.buttonBox)
         self.setLayout(self.layout)
+
+    def verifyVal(self):
+        nick = self.txtNick.text().strip()
+        addr = self.txtAdr.text().strip()
+        port = self.txtPort.text().strip()
+
+        valid = True
+
+        if (port.isdigit() and len(port) > 0):
+            port = int(port)
+            if ( port <= 1 or port >= 65535):
+                valid = False
+        else:
+            valid = False
+
+        if ( ',' in nick != 0 or len(nick) == 0):
+            valid = False
+        
+        if ( not self.verifyAddr(addr) ):
+            valid = False
+
+        if (valid):
+            self.accept()
+        
+    def verifyAddr(self, addr):
+        try:
+            socket.inet_aton(addr)
+            return True
+        except:
+            return False
 
     def getVal(self):
         val = {"nickname" : self.txtNick.text().strip(), "address" : self.txtAdr.text(), "port" : int(self.txtPort.text())}
