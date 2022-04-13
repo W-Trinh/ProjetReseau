@@ -401,13 +401,13 @@ class Server:
                     self.clients[client]=newNick
                     
                     
-             if oldNick in self.request.values():
+            if oldNick in self.request.values():
                 print("je suis entrée dans le if des request")
                 for key in self.request:
                     if key == client:
                         self.request[client] = newNick
                         
-              if oldNick in self.private.values():
+            if oldNick in self.private.values():
                  for key in self.private:
                     if key == client:
                         self.private[client] = newNick         
