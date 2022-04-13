@@ -100,6 +100,7 @@ class Server:
 
                 elif commande[0] == 'BACK':
                     message="418 : You are already online"
+                    logging.info(message)
                     client.send(message.encode())
                     
                 elif commande[0] == 'ACCEPT':
