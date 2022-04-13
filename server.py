@@ -50,23 +50,51 @@ class Server:
                 print(commande)
                 #print(client)
                 if commande[0] == 'QUIT':
-                    self.quit(client)
-                    boo = False
+                    if len(commande) > 1:
+                        client.send("420 ! this command takes no parameter")
+                        logging.info("420 ! this command takes no parameter")
+                    else:
+                        self.quit(client)
+                        boo = False
                 elif commande[0] == 'LIST':
                     self.liste_clients(client)
 
                 elif commande[0] == 'HELP':
-                    self.liste_commandes(client)
+                    if len(commande) > 1:
+                       client.send("420 ! this command takes no parameter")
+                       logging.info("420 ! this command takes no parameter")
+                    else:
+                        self.liste_clients(client)
 
                 elif commande[0] == 'EDIT':
-                    self.verify_nickname(commande[1],client)
+                    if len(commande) < 2:
+                        client.send("418 ! Missing parameter".encode())
+                        logging.info("418 ! Missing parameter")
+                    elif commande[1] == ' ':
+                        client.send("418 ! Missing parameter".encode())
+                        logging.info("418 ! Missing parameter")
+                    else:
+                        self.verify_nickname(commande[1],client)
 
                 elif commande[0] == 'CHAT':
-                    msg = message.split(" ",1)
-                    self.broadcast("200 : " + self.clients[client] + " : " + commande[1])
+                    if len(commande) < 2:
+                        client.send("418 ! Missing parameter".encode())
+                        logging.info("418 ! Missing parameter")
+                    elif commande[1] == ' ':
+                        client.send("418 ! Missing parameter".encode())
+                        logging.info("418 ! Missing paramater")
+                    else:
+                        self.broadcast("200 : " + self.clients[client] + " : " + commande[1])
 
                 elif commande[0] == 'STOP':
-                    self.stop(commande[1],client)
+                    if len(commande) < 2:
+                        client.send("418 ! Missing parameter".encode())
+                        logging.info("418 ! Missing parameter")
+                    elif commande[1] == ' ':
+                        client.send("418 ! Missing parameter".encode())
+                        logging.info("418 ! Missing parameter")
+                    else:
+                        self.stop(commande[1],client)
 
                 elif commande[0] == 'SEND':
                     print(f'mon tableau: {commande} et sa taille: {len(commande)}')
