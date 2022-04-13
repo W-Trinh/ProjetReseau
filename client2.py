@@ -22,19 +22,22 @@ class Client():
                 if message == "nickname?":
                     self.client.send(self.nickname.encode('utf-8'))
 
-                #elif message == f"{self.nickname} is already taken press Enter to choose another nickname":
-
-                while message == f"{self.nickname} is already taken press Enter to choose another nickname":
-
+                while message == f"409 {self.nickname} is already taken":
                     print(message)
                     self.nickname = input("choose another nickname:")
                     self.client.send(self.nickname.encode())
                     message = self.client.recv(1024).decode('ascii')
 
+                if message.startswith("4") or message.startswith("2") or message.startswith("1"):
+                    print(message)
+
+                #elif message == f"{self.nickname} is already taken press Enter to choose another nickname":
+
+                
+
 
                 #message = self.client.recv(1024).decode()
-                if message.startswith("4") or message.startswith("2"):
-                    print(message)
+                
 
             except KeyboardInterrupt:
                 print("an error has occured!")
@@ -44,7 +47,7 @@ class Client():
 
     def write(self):
         while True:
-            message = f'{self.nickname}: {input("")}'
+            message = input("")
             self.client.send(message.encode('ascii'))
             
 
@@ -55,18 +58,25 @@ if __name__ == "__main__":
     
     #port = int(input("choose a port:"))
     #host = input("choose a host:")
-    port = 5501
+    port = 1113
     host = "127.0.0.1"
     commande = input(f"Enter <CONNECT {host} {port}> to connect yourself:")
     if commande.upper() == f"CONNECT {host} {port}":
         nickname = input("choose a nickname:")
+
         client = Client(nickname,host,port)
+        
         client.connect()
+        
+
         receive_thread = threading.Thread(target=client.receive)
         receive_thread.start()
 
+        
         write_thread = threading.Thread(target=client.write)
         write_thread.start()
+
+        
     
     else:
         print(f"Failed to connect")
