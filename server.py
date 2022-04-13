@@ -46,6 +46,7 @@ class Server:
 
                 commande = message.split(" ",1)
                 commande_de_tell = message.split(" ",2)
+                commande_de_sfic = message.split(" ",5)
                 print(commande)
                 #print(client)
                 if commande[0] == 'QUIT':
@@ -90,6 +91,12 @@ class Server:
                         logging.info("418 Missing parameter")
                     else:
                         self.refuse(client,commande[1])
+                        
+                 elif commande_de_sfic[1] == 'REFUSEFILE':
+                    self.refuseFile(commande_de_sfic[2],commande_de_sfic[3],commande_de_sfic[4],commande_de_sfic[5],client)
+                 
+                 elif commande_de_sfic[1] == 'ACCEPTFILE' and len(commande_de_sfic)>4:
+                    self.acceptFile(commande_de_sfic[2],commande_de_sfic[3],commande_de_sfic[4],commande_de_sfic[5],client)
 
 
                 elif commande[0] == 'CONNECT':
@@ -351,12 +358,95 @@ class Server:
                     #print(f'verify:{self.clients}')
 
 
-    def liste_commandes(self,client):
+     def liste_commandes(self,client):
         #ex=print(*self.commands,sep=", ")
         for key,value in self.commandes.items():
             print(f"202 {key}: {value}")
             client.send(f"202 {key}: {value} \n".encode())
             logging.info(f"202 {key}: {value} \n".encode())
+            
+            
+     def acceptFile(self,client_receiving_response,file,port,address,client):
+        print("preparing to accept")
+        print(self.files_request)
+        if client_receiving_response in self.clients.values():
+            if client_receiving_response in self.files_request.values():
+                if client_receiving_response == self.clients[client]:
+                    message = f"419 : you can't use this command to yourself"
+                    client.send(message.encode())
+                else:
+                    message = f"201 : {self.clients[client]} accepted your request"
+                    message2 = f"201 : you accepted the file  of {client_receiving_response}"
+                    for key, valeur in self.clients.items(): 
+                        if client_receiving_response == valeur:
+                            client_receiving_response_sock = key
+                            #path = '/home/amal/Bureau/test.txt'
+                            #basename=os.path.basename(path)
+                            #print(basename)
+                            #socksock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                            #socksock.bind((address,port))
+                            #conn,add = socksock.accept()
+                            with open(basename, "wb") as f:
+                                while True:
+                                    bytes_read = client.recv(1024)
+                                    message = "sent"
+                                    client.send(message.encode())
+                                    if not bytes_read:
+                                        message = "oof"
+                                        client.send(message.encode())
+                                        break
+                                    f.write(bytes_read)
+                                    message = "oula"
+                                    client.send(message.encode())
+
+                            del self.files_request[client_receiving_response_sock]
+                            del self.files_request[client]
+
+
+                    client_receiving_response_sock.send(message.encode())
+                    '''
+                    filename = 'Bureau/test.txt'
+                    filename = os.path.basename(filename)
+                    print(filename)
+                    '''
+            else:
+                msg = "400 : you don't have any resquest to accept"
+                client.send(msg.encode())
+
+        else:
+            print(f"408 {client_receiving_response} doesn't exist")
+            message = f"408 {client_receiving_response} doesn't exist"
+            client.send(message.encode())
+
+            
+     def refuseFile(self,client_receiving_response,file,port,address,client):
+        print("preparing to REFUSE")
+        print(self.files_request)
+        if client_receiving_response in self.clients.values():
+            if client_receiving_response in self.files_request.values():
+                if client_receiving_response == self.clients[client]:
+                    message = f"419 : you can't use this command to yourself"
+                    client.send(message.encode())
+                else:
+
+                    message = f"201 : {self.clients[client]} refused your request"
+                    message2 = f"201 : you refused the file  of {client_receiving_response}"
+                    for key, valeur in self.clients.items(): 
+                        if client_receiving_response == valeur: 
+                            client_receiving_response_sock = key
+                            del self.files_request[client_receiving_response_sock]
+                            del self.files_request[client]
+
+
+                    client_receiving_response_sock.send(message.encode())
+            else:
+                msg = "400 : you don't have any resquest to refuse"
+                client.send(msg.encode())
+
+        else:
+            print(f"408 {client_receiving_response} doesn't exist")
+            message = f"408 {client_receiving_response} doesn't exist"
+            client.send(message.encode())
 
         #print(tabulate(self.com, headers=["command","definition"]))
 
