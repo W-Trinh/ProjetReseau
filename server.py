@@ -7,6 +7,7 @@ logging.basicConfig(filename="serveur.log", filemode="w", format='%(asctime)s: %
                         datefmt="%Y/%m/%d %H:%M:%S", level=logging.INFO)
 
 class Server:
+    #constructeur
     def __init__(self):
         config = configparser.ConfigParser()
         config.read("dncserver.conf")
@@ -20,16 +21,18 @@ class Server:
         self.commandes = {"QUIT":"Logout to the server","CHAT":"Helps you send message to all connected clients","ABS":"Changes the state of the user to away(means you can't send messages but you can receive)","BACK":"changes the state of the user from away to active","LIST":"display every user connected","EDIT new nickname":"changes the user's nickname if new one is not already taken","REFUSE nickname":"Helps to refuse a request of having a private chat with the user who sent it","SEND nickname" : "sends a request of having a private chat with another user","TELL nickname message": "sends a private message to the other user once they accepted to have a private chat","STOP nickname": "Stops a private chat between two users","SFIC nickname file":"sends a file once the other user accepts to receive ","ACCEPT nickname.. port... address ...": "accepts a request of having a private chat if its only the nickname of the user that is given in arguments and if the port and the address are also given it will accept to receive a file from the user","HELP":"displays a list of all commands and their definitions"}
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
+    #démarrer le serveur
     def server_start(self):
         print("Server started on :" + self.address + ", " + str(self.port))
         self.server.bind((self.address,self.port))
         self.server.listen()
 
-
+    #envoyer les messages à tout le monde
     def broadcast(self,message):
         for client in self.clients:
             client.send(message.encode())
 
+    #traitement des messages des clients
     def handle(self,client):
         boo = True
         while boo:
@@ -148,7 +151,7 @@ class Server:
                 del self.clients[client]
                 break
 
-
+    #recevoir la connexion
     def receive(self):
         while True:
             client, address = self.server.accept()
@@ -162,6 +165,7 @@ class Server:
             thread = threading.Thread(target=self.handle,args=(client,))
             thread.start()
 
+    #passer en mode absent
     def absent(self,client):
         self.broadcast(f'200 : {self.clients[client]} is now away')
         logging.info(f'200 : {self.clients[client]} is now away')
@@ -184,6 +188,7 @@ class Server:
             except:
                 print("an error")
     
+    #envoyer une requête de messages privées
     def send(self,client,receiver):
         if receiver in self.clients.values():
             if receiver == self.clients[client]:
@@ -208,7 +213,7 @@ class Server:
             logging.info(message)
             client.send(message.encode())
         
-
+    #refuser la requête de messages privés 
     def refuse(self,client_to_respond,client_receiving_response):
         if client_receiving_response in self.clients.values():
             if client_receiving_response in self.request.values():
@@ -240,7 +245,7 @@ class Server:
             
 
         
-
+    #accepter la requête de messages privées
     def accept(self,client_to_respond,client_receiving_response):
         if client_receiving_response in self.clients.values():
             if client_receiving_response in self.request.values():
@@ -273,7 +278,7 @@ class Server:
             logging.info(message)
             client_to_respond.send(message.encode())
 
-
+    #envoyer des messages privées 
     def tell(self,client_to_respond,message,client):
         if client_to_respond in self.clients.values():
             if client_to_respond in self.private.values():
@@ -301,7 +306,7 @@ class Server:
             logging.info(msg)
             client.send(msg.encode())
 
-
+    #arrêter les messages privées
     def stop(self,sender,client):
         if sender in self.clients.values():
             if sender in self.private.values():
@@ -334,6 +339,7 @@ class Server:
             logging.info(msg)
             client.send(msg.encode())
 
+    #envoyer une requête d'envoie de fichier
     def send_file(self,receiver,fichier,client):
         if receiver in self.clients.values():
             if receiver == self.clients[client]:
@@ -353,6 +359,7 @@ class Server:
             message = f"408 : {receiver} doesn't exist"
             client.send(message.encode())
 
+    #modifier le pseudo
     def verify_nickname(self,newNick,client):
         if newNick in self.clients.values():
             message=f'409 : {newNick} is already taken'
@@ -379,13 +386,13 @@ class Server:
                         self.private[client] = newNick         
               
 
-
+    #afficher la liste des commandes
     def liste_commandes(self,client):
         for key,value in self.commandes.items():
             client.send(f"202 {key}: {value} \n".encode())
             logging.info(f"202 {key}: {value} \n".encode())
             
-            
+    #accepter le fichier      
     def acceptFile(self,client_receiving_response,filename,port,address,client):
         if client_receiving_response in self.clients.values():
             if client_receiving_response in self.files_request.values():
@@ -414,7 +421,7 @@ class Server:
             message = f"408 {client_receiving_response} doesn't exist"
             client.send(message.encode())
 
-            
+    #refuser le fichier       
     def refuseFile(self,client_receiving_response,client):
         if client_receiving_response in self.clients.values():
             if client_receiving_response in self.files_request.values():
@@ -443,7 +450,7 @@ class Server:
             client.send(message.encode())
 
 
-
+    #liste des clients connectés
     def liste_clients(self,client):
         x = list(self.clients.values())
         x.sort()
@@ -452,7 +459,7 @@ class Server:
         logging.info(message)
         client.send(message.encode())
 
-
+    #quitter le serveur
     def quit(self,client):
         message="207 : you have been disconnected"
         client.send(message.encode())
@@ -462,6 +469,7 @@ class Server:
         logging.info(f'207 : {name} disconnected')
         client.close()
         
+    #créer un fichier de configuration
     def create_config(self):
         config = configparser.ConfigParser()
         config["settings"] = {"address":self.address,
