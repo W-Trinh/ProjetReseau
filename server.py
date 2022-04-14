@@ -10,7 +10,6 @@ class Server:
     def __init__(self):
         config = configparser.ConfigParser()
         config.read("config.ini")
-
         self.address = config.get("settings", "address")
         self.port = int(config.get("settings", "port"))
         self.clients=dict()
@@ -18,10 +17,7 @@ class Server:
         self.request=dict()
         self.files_request = dict()
         self.away=[]
-        #self.commands=["QUIT","CHAT","ABS","BACK","LIST","EDIT","REFUSE","SEND","TELL","STOP","SFIC","ACCEPT","HELP"]
-        #self.definitions=["logout the user","send a message publically","Changes the state of the user from abs to away"]
         self.commandes = {"QUIT":"Logout to the server","CHAT":"Helps you send message to all connected clients","ABS":"Changes the state of the user to away(means you can't send messages but you can receive)","BACK":"changes the state of the user from away to active","LIST":"display every user connected","EDIT new nickname":"changes the user's nickname if new one is not already taken","REFUSE nickname":"Helps to refuse a request of having a private chat with the user who sent it","SEND nickname" : "sends a request of having a private chat with another user","TELL nickname message": "sends a private message to the other user once they accepted to have a private chat","STOP nickname": "Stops a private chat between two users","SFIC nickname file":"sends a file once the other user accepts to receive ","ACCEPT nickname.. port... address ...": "accepts a request of having a private chat if its only the nickname of the user that is given in arguments and if the port and the address are also given it will accept to receive a file from the user","HELP":"displays a list of all commands and their definitions"}
-        #self.com = [["quit","LOGOUT THE USER"],["CHAT","blabla"]]
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     def server_start(self):
@@ -39,16 +35,10 @@ class Server:
         while boo:
             try:
                 message = client.recv(1024).decode("ascii")
-
-                print(message)
-                
                 logging.info(f'{self.clients[client]} : {message}')
-
                 commande = message.split(" ",1)
                 commande_de_tell = message.split(" ",2)
                 commande_de_sfic = message.split(" ",5)
-                print(commande)
-                #print(client)
                 if commande[0] == 'QUIT':
                     if len(commande) > 1:
                         client.send("420 ! this command takes no parameter")
@@ -64,7 +54,7 @@ class Server:
                        client.send("420 ! this command takes no parameter")
                        logging.info("420 ! this command takes no parameter")
                     else:
-                        self.liste_clients(client)
+                        self.liste_commandes(client)
 
                 elif commande[0] == 'EDIT':
                     if len(commande) < 2:
@@ -98,7 +88,6 @@ class Server:
 
                 elif commande[0] == 'SEND':
                     print(f'mon tableau: {commande} et sa taille: {len(commande)}')
-                    print(commande)
                     if len(commande) < 2:
                         client.send("418 ! Missing parameter".encode())
                         logging.info("418 ! Missing parameter")
@@ -125,10 +114,6 @@ class Server:
                  
                 elif commande_de_sfic[0] == 'ACCEPTFILE' and len(commande_de_sfic)>3:
                     self.acceptFile(commande_de_sfic[1],commande_de_sfic[2],commande_de_sfic[3],commande_de_sfic[4],client)
-
-
-                elif commande[0] == 'CONNECT':
-                    pass
 
                 elif commande[0] == 'ABS':
                     self.absent(client)
@@ -174,9 +159,6 @@ class Server:
             print(f'Nickname of the client is {nickname} !')
             self.broadcast(f'206: {nickname} joined the chat! ')
             logging.info(f'206 {nickname} joined the chat! ')
-            
-                         
-        
             thread = threading.Thread(target=self.handle,args=(client,))
             thread.start()
 
@@ -203,7 +185,6 @@ class Server:
                 print("an error")
     
     def send(self,client,receiver):
-        print("here")
         if receiver in self.clients.values():
             if receiver == self.clients[client]:
                 message = f"419 : {self.clients[client]} you can't have a private chat with yourself"
@@ -217,10 +198,7 @@ class Server:
                         thread.start()
                         message = f"100 : {self.clients[client]} wants to have a private a chat with you."
                         logging.info(message)
-                        print("Allo")
                         receiver_sock.send(message.encode())
-                print(self.clients[client])
-                print(self.clients[receiver_sock])
                 self.request[client] = self.clients[client]
                 self.request[receiver_sock] = self.clients[receiver_sock]
 
@@ -248,9 +226,6 @@ class Server:
                             client_receiving_response_sock = key
                             del self.request[client_receiving_response_sock]
                             del self.request[client_to_respond]
-                            #print(self.private)
-                            #print(self.clients[client_to_respond])
-                            #print(client_receiving_response)
                     client_receiving_response_sock.send(message.encode())
                     client_to_respond.send(message2.encode())
             else:
@@ -285,9 +260,6 @@ class Server:
                             self.private[client_receiving_response_sock] = self.clients[client_receiving_response_sock]
                             del self.request[client_receiving_response_sock]
                             del self.request[client_to_respond]
-                            #print(self.private)
-                            #print(self.clients[client_to_respond])
-                            #print(client_receiving_response)
 
                     client_receiving_response_sock.send(message.encode())
             else:
@@ -316,7 +288,6 @@ class Server:
                             msg = f"205 : {self.private[client]} : {message}"
                             logging.info(msg)
                             client_receiving_response_sock.send(msg.encode())
-                        #client_receiving_response_sock.send(message.encode())
             elif self.clients[client] == client_to_respond:
                 msg = "419 : you cant send a message to yourself"
                 logging.info(msg)
@@ -362,10 +333,6 @@ class Server:
             msg = "408 : client doesnt exist"
             logging.info(msg)
             client.send(msg.encode())
-    
-
-    def connect(self,client):
-        pass
 
     def send_file(self,receiver,fichier,client):
         if receiver in self.clients.values():
@@ -380,7 +347,6 @@ class Server:
                         receiver_sock.send(message.encode())
                 self.files_request[client] = self.clients[client]
                 self.files_request[receiver_sock] = self.clients[receiver_sock]
-                print(self.files_request)
 
         else:
             print(f"408 : {receiver} doesn't exist")
@@ -415,15 +381,12 @@ class Server:
 
 
     def liste_commandes(self,client):
-        #ex=print(*self.commands,sep=", ")
         for key,value in self.commandes.items():
-            print(f"202 {key}: {value}")
             client.send(f"202 {key}: {value} \n".encode())
             logging.info(f"202 {key}: {value} \n".encode())
             
             
     def acceptFile(self,client_receiving_response,filename,port,address,client):
-        print("preparing to accept")
         if client_receiving_response in self.clients.values():
             if client_receiving_response in self.files_request.values():
                 if client_receiving_response == self.clients[client]:
@@ -453,7 +416,6 @@ class Server:
 
             
     def refuseFile(self,client_receiving_response,client):
-        print("preparing to REFUSE")
         if client_receiving_response in self.clients.values():
             if client_receiving_response in self.files_request.values():
                 if client_receiving_response == self.clients[client]:
@@ -480,14 +442,12 @@ class Server:
             message = f"408 {client_receiving_response} doesn't exist"
             client.send(message.encode())
 
-        #print(tabulate(self.com, headers=["command","definition"]))
 
 
     def liste_clients(self,client):
         x = list(self.clients.values())
         x.sort()
         s=" ,".join(x)
-        print(s)
         message=f'203 : {s}'
         logging.info(message)
         client.send(message.encode())
@@ -496,7 +456,6 @@ class Server:
     def quit(self,client):
         message="207 : you have been disconnected"
         client.send(message.encode())
-        #self.Connected.remove(self.clients[client])
         name = self.clients[client]
         del self.clients[client]
         self.broadcast(f'207 : {name} disconnected')
@@ -511,13 +470,7 @@ class Server:
             config.write(fic)
         return config
 
-'''print("server is listening ...")
-serveur = Server('127.0.0.1',9381)
-serveur.server_start()
-serveur.receive()
-'''
 
-#host = "127.0.0.1"
 serveur = Server()
 serveur.server_start()
 print("server is listening ...")
