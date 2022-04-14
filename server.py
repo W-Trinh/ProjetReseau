@@ -9,7 +9,7 @@ logging.basicConfig(filename="serveur.log", filemode="w", format='%(asctime)s: %
 class Server:
     def __init__(self):
         config = configparser.ConfigParser()
-        config.read("config.ini")
+        config.read("dncserver.conf")
         self.address = config.get("settings", "address")
         self.port = int(config.get("settings", "port"))
         self.clients=dict()
