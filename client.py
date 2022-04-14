@@ -10,10 +10,6 @@ class Client():
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.file_to_send = ""
 
-    """nickname = input("Choose a nickname : ")
-    client=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client.connect(('127.0.0.1',9184))
-    """
     def connect(self):
         self.client.connect((self.address,self.port))
 
@@ -22,11 +18,10 @@ class Client():
             try:
                 message = self.client.recv(1024).decode('ascii')
                 commande = message.split(":")
-                print(commande)
-                print(message)
                 if message == "nickname?":
                     self.client.send(self.nickname.encode('utf-8'))
                 else:
+                    print(message)
                     if commande[0].startswith("210"):
                         if "accepted the download" in commande[1].strip():
                             argument = commande[2].split(",")
@@ -34,7 +29,6 @@ class Client():
                         
                             
             except:
-                print(message)
                 print("an error has occured!")
                 self.client.close()
                 break
@@ -45,7 +39,6 @@ class Client():
             self.client.send(message.encode('ascii'))
 
             commande = message.split(" ")
-            print(commande)
 
             if commande[0] == "ACCEPTFILE" and len(commande) == 5:
                 self.accept_file(commande[4].strip(), int(commande[3].strip()), commande[2].strip())   
@@ -54,7 +47,6 @@ class Client():
                 self.file_to_send = commande[2]
                 
     def accept_file(self, addr, port, filename):
-        print("Jaccepte un fichier")
         recvSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         recvSocket.bind((addr, port))
         recvSocket.listen()
@@ -76,10 +68,6 @@ class Client():
         recvSocket.close()       
 
     def send_file(self, addr, port, filename):
-        print("jenvoi un fichier")
-        print(addr)
-        print(port)
-        print(filename)
         sendSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sendSocket.connect( (addr,port) )
 
@@ -93,16 +81,13 @@ class Client():
                 break
 
         sendSocket.close()
+        print("le fichier a été bien envoyé")
 
 if __name__ == "__main__":
            
     nickname = input("choose a nickname:")
     port = int(input("choose a port:"))
     host = input("choose a host:")
-    #port = 9900
-    #host = "127.0.0.1"
-    #commande = input(f"Enter CONNECT {host} {port} to connect yourself:")
-    #if commande.upper() == f"CONNECT {host} {port}":
 
     client = Client(nickname,host,port)
     client.connect()
@@ -111,6 +96,3 @@ if __name__ == "__main__":
 
     write_thread = threading.Thread(target=client.write)
     write_thread.start()
-    
-#    else:
-#        print(f"Failed to connect")
