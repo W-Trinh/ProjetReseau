@@ -39,8 +39,10 @@ Table of Contents
        LIST Command  . . . . . . . . . . . . . . . . . . . . . . . .   5
        EDIT Command  . . . . . . . . . . . . . . . . . . . . . . . .   5
        ACCEPT Command  . . . . . . . . . . . . . . . . . . . . . . .   6
+       ACCEPTFILE Command  . . . . . . . . . . . . . . . . . . . . .   6
        REFUSE Command  . . . . . . . . . . . . . . . . . . . . . . .   6
        SEND Command  . . . . . . . . . . . . . . . . . . . . . . . .   7
+       REFUSEFILE Command  . . . . . . . . . . . . . . . . . . . . . . 7
        TELL Command  . . . . . . . . . . . . . . . . . . . . . . . .   8
        STOP Command  . . . . . . . . . . . . . . . . . . . . . . . .   8
        SFIC Command  . . . . . . . . . . . . . . . . . . . . . . . .   9
