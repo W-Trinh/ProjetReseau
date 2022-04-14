@@ -10,9 +10,11 @@ class Client():
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.file_to_send = ""
 
+    #se connecter
     def connect(self):
         self.client.connect((self.address,self.port))
 
+    #traitement des messages recus du serveur
     def receive(self):
         while True:
             try:
@@ -33,6 +35,7 @@ class Client():
                 self.client.close()
                 break
 
+    #traitement des messages du clients
     def write(self):
         while True:
             message = input("")
@@ -45,7 +48,9 @@ class Client():
 
             if commande[0] == "SFIC" and len(commande) == 3:
                 self.file_to_send = commande[2]
-                
+
+
+    #accepter le fichier
     def accept_file(self, addr, port, filename):
         recvSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         recvSocket.bind((addr, port))
@@ -66,7 +71,8 @@ class Client():
             f.close()
             client.close()
         recvSocket.close()       
-
+    
+    #envoyer le fichier
     def send_file(self, addr, port, filename):
         sendSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sendSocket.connect( (addr,port) )
