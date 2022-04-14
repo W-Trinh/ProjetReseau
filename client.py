@@ -54,6 +54,7 @@ class Client():
                 self.file_to_send = commande[2]
                 
     def accept_file(self, addr, port, filename):
+        print("Jaccepte un fichier")
         recvSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         recvSocket.bind((addr, port))
         recvSocket.listen()
@@ -75,6 +76,7 @@ class Client():
         recvSocket.close()       
 
     def send_file(self, addr, port, filename):
+        print("jenvoi un fichier")
         print(addr)
         print(port)
         print(filename)

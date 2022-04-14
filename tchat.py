@@ -1,5 +1,5 @@
 from PyQt5 import QtCore
-from PyQt5.QtWidgets import QApplication, QWidget, QMainWindow, QMessageBox, QInputDialog, QPushButton, QDialog, QDialogButtonBox, QMenu, QAction
+from PyQt5.QtWidgets import QApplication, QWidget, QMainWindow, QMessageBox, QInputDialog, QPushButton, QDialog, QDialogButtonBox, QMenu, QAction, QFileDialog
 from PyQt5.QtGui import QTextCursor, QStandardItemModel
 from fenetre import Ui_TchatDNC
 from client import Client
@@ -17,6 +17,8 @@ class Tchat(QMainWindow, Ui_TchatDNC):
             val = connexion.getVal()
         self.user = Client(val["nickname"], val["address"], val["port"])
         self.user.connect()
+
+        self.file_to_send = ""
 
         self.setupUi(self)
         self.setWindowTitle("DNC Chat")
@@ -77,40 +79,7 @@ class Tchat(QMainWindow, Ui_TchatDNC):
             self.butState.setText("Online")
             self.butEdit.setEnabled(True)
             self.use_command("BACK")
-
-    def accept_file(self, addr, port):
-        """
-        socketRecv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        socketRecv.bind(addr, port)
-        socketRecv.listen()
-
-        client, address = socketRecv.accept()
-
-        fic = open(file,"wb")
-        while(True):
-            line = client.recv(1024)
-            while(line):
-                fic.write(l)
-                line = client.recv(1024)
-        fic.close()
-        client.close()
-        socketRecv.close()
-        """
-    def send_file(self, addr, port, file):
-        """
-        socketSend = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        socketSend.connect(addr, port)
-        socketSend.send()
-
-        fic = open(file,"rb")
-        line = fic.read(1024)
-        while(line):
-            socketSend.send(line)
-            l = fic.read(1024)
-        
-        socketSend.close()
-        """
-
+            
     def receive(self):
         gaveNick = False
         while True:
@@ -127,6 +96,10 @@ class Tchat(QMainWindow, Ui_TchatDNC):
                     message = '<p style= "color: white">' + reponse.split(":",1)[1].strip() + '</p>'
 
                     if (code.startswith("2")):
+                        if(code == "210" and "accepted the download" in reponse):
+                            argument = reponse.split(":")[2].split(",")
+                            self.user.send_file(argument[0].strip(), int(argument[1].strip()), self.file_to_send)
+
                         if(code == "207" and reponse.split(":",1)[1].strip().startswith("you")):
                             break
 
@@ -179,31 +152,50 @@ class Tchat(QMainWindow, Ui_TchatDNC):
 
 
             menu.addAction(privatechatAction)
-            menu.addAction(sendfileAction)
             menu.addAction(acceptAction)
             menu.addAction(refuseAction)
             menu.addAction(stopAction)
+            menu.addAction(sendfileAction)
+            menu.addAction(acceptfileAction)
+            menu.addAction(refusefileAction)
 
             action = menu.exec(event.globalPos())
-            
             
             userclicked = source.itemAt(event.pos())
             
             if userclicked != None:
-                if action == privatechatAction:
-                    self.use_command("SEND", userclicked.text().strip())
-                
-                if action == sendfileAction:
-                    print("SFIC " + userclicked.text() )
+                receiver = userclicked.text().strip()
 
+                if action == privatechatAction:
+                    self.use_command("SEND", receiver)
+                
                 if action == acceptAction:
-                    self.use_command("ACCEPT", userclicked.text().strip())
+                    self.use_command("ACCEPT", receiver)
 
                 if action == refuseAction:
-                    self.use_command("REFUSE", userclicked.text().strip())
+                    self.use_command("REFUSE", receiver)
                 
                 if action == stopAction:
-                    self.use_command("STOP", userclicked.text().strip())
+                    self.use_command("STOP", receiver)
+
+                if action == sendfileAction:
+                    filename, _ = QFileDialog.getOpenFileName(None, "Open File", "", "All Files (*.*)", options=QFileDialog.DontUseNativeDialog)
+                    
+                    if filename:
+                        self.file_to_send = filename.split("/")[-1]
+                        self.use_command("SFIC", receiver, self.file_to_send)
+                    
+                if action == acceptfileAction:
+                    connexion = ConnDialog()
+                    connexion.labNick.setText("File name")
+                    if connexion.exec_() == QDialog.Accepted:
+                        val = connexion.getVal()
+    
+                    self.use_command("ACCEPTFILE", receiver, val["nickname"], str(val["port"]), val["address"])
+                    self.user.accept_file(val["address"], val["port"], val["nickname"])
+
+                if action == refusefileAction:
+                    self.use_command("REFUSEFILE", receiver)
                 
                 return True
         return super().eventFilter(source,event)
